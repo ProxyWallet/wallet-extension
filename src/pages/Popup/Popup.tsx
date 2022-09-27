@@ -1,24 +1,40 @@
-import React from 'react';
 import './Popup.css';
 
-const Popup = () => {
+import React, { useEffect, useState } from 'react';
+import { Router,goTo} from 'react-chrome-extension-router';
+
+import { Context } from './Context';
+import AuthenticationPage from './pages/AuthenticationPage/AuthenticationPage';
+import MainPage from './pages/MainPage/MainPage';
+
+function Popup() {
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [accountAddress, setAccountAddress] = useState(false);
+
+  useEffect(() => {
+    if(loggedIn){
+      goTo(MainPage)
+    }
+  })
+  
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          Edit <code>src/pages/Popup/Popup.tsx</code> and save to reload...
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React!
-        </a>
-      </header>
-    </div>
+    <>
+      <Context.Provider
+        value={{
+          loggedIn,
+          setLoggedIn,
+          accountAddress,
+          setAccountAddress,
+        }}
+      >
+        <div>
+          <Router>
+            <AuthenticationPage />
+          </Router>
+        </div>
+      </Context.Provider>
+    </>
   );
-};
+}
 
 export default Popup;

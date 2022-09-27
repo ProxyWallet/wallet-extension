@@ -6,7 +6,9 @@ var webpack = require('webpack'),
   HtmlWebpackPlugin = require('html-webpack-plugin'),
   TerserPlugin = require('terser-webpack-plugin');
 var { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const MiniCssExtractPlugin = require("mini-css-extract-plugin")
 
+const fs = require('fs');
 const ASSET_PATH = process.env.ASSET_PATH || '/';
 
 var alias = {
@@ -33,6 +35,12 @@ if (fileSystem.existsSync(secretsPath)) {
   alias['secrets'] = secretsPath;
 }
 
+// Check if Tailwind config exists
+const useTailwind = fs.existsSync(
+  path.join(__dirname, 'tailwind.config.js')
+);
+
+
 var options = {
   mode: process.env.NODE_ENV || 'development',
   entry: {
@@ -54,24 +62,29 @@ var options = {
   },
   module: {
     rules: [
+      // {
+      //   // look for .css or .scss files
+      //   test: /\.(css|scss)$/,
+      //   // in the `src` directory
+      //   use: [
+
+      //     {
+      //       loader: 'style-loader',
+      //     },
+      //     {
+      //       loader: 'css-loader',
+      //     },
+      //     {
+      //       loader: 'sass-loader',
+      //       options: {
+      //         sourceMap: true,
+      //       },
+      //     },
+      //   ],
+      // },
       {
-        // look for .css or .scss files
-        test: /\.(css|scss)$/,
-        // in the `src` directory
-        use: [
-          {
-            loader: 'style-loader',
-          },
-          {
-            loader: 'css-loader',
-          },
-          {
-            loader: 'sass-loader',
-            options: {
-              sourceMap: true,
-            },
-          },
-        ],
+        test: /\.css$/i,
+        use: ['style-loader', 'css-loader', 'postcss-loader'],
       },
       {
         test: new RegExp('.(' + fileExtensions.join('|') + ')$'),
@@ -109,6 +122,7 @@ var options = {
       .concat(['.js', '.jsx', '.ts', '.tsx', '.css']),
   },
   plugins: [
+    new MiniCssExtractPlugin(),
     new CleanWebpackPlugin({ verbose: false }),
     new webpack.ProgressPlugin(),
     // expose and write the allowed env vars on the compiled bundle
@@ -132,29 +146,14 @@ var options = {
         },
       ],
     }),
-    // new CopyWebpackPlugin({
-    //   patterns: [
-    //     {
-    //       from: 'src/pages/Content/content.styles.css',
-    //       to: path.join(__dirname, 'build'),
-    //       force: true,
-    //     },
-    //   ],
-    // }),
     new CopyWebpackPlugin({
       patterns: [
         {
-          from: 'src/assets/img/icon-128.png',
-          to: path.join(__dirname, 'build'),
-          force: true,
-        },
-      ],
-    }),
-    new CopyWebpackPlugin({
-      patterns: [
-        {
-          from: 'src/assets/img/icon-34.png',
-          to: path.join(__dirname, 'build'),
+          // TODO: maybe need to change
+          from: 'src/assets/**/*.*',
+          to({ context, absoluteFilename }) {
+            return path.join(__dirname, 'build/assets/[name].[ext]')
+          },
           force: true,
         },
       ],
