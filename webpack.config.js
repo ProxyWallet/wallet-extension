@@ -6,7 +6,7 @@ var webpack = require('webpack'),
   HtmlWebpackPlugin = require('html-webpack-plugin'),
   TerserPlugin = require('terser-webpack-plugin');
 var { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const MiniCssExtractPlugin = require("mini-css-extract-plugin")
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const fs = require('fs');
 const ASSET_PATH = process.env.ASSET_PATH || '/';
@@ -146,7 +146,7 @@ var options = {
           // TODO: maybe need to change
           from: 'src/assets/**/*.*',
           to({ context, absoluteFilename }) {
-            return path.join(__dirname, 'build/assets/[name].[ext]')
+            return path.join(__dirname, 'build/assets/[name].[ext]');
           },
           force: true,
         },

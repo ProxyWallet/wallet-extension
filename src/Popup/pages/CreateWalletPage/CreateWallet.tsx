@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import React, { useState } from 'react';
-import { goBack } from 'react-chrome-extension-router';
+import { goBack, goTo } from 'react-chrome-extension-router';
+import LoginPage from '../LoginPage/LoginPage';
 
 const CreateWalletPage = (props: any) => {
   const [createdWallet, setCreatedWalled] = useState<any>();
@@ -34,8 +35,18 @@ const CreateWalletPage = (props: any) => {
         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
         onClick={() => goBack()}
       >
-        Back      
+        Back
       </button>
+      {createdWallet ? (
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={() => goTo(LoginPage)}
+        >
+          LogIN
+        </button>
+      ) : (
+        ''
+      )}
     </div>
   );
 };
