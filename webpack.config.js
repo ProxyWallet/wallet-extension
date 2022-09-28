@@ -42,6 +42,7 @@ var options = {
     popup: path.join(__dirname, 'src', 'Popup', 'index'),
     background: path.join(__dirname, 'src', 'Background', 'index'),
     contentScript: path.join(__dirname, 'src', 'Content', 'content'),
+    inject: path.join(__dirname, 'src', 'Content', 'inject'),
     devtools: path.join(__dirname, 'src', 'Devtools', 'index'),
     panel: path.join(__dirname, 'src', 'Panel', 'index'),
   },
