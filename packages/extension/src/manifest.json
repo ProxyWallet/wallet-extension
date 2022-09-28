@@ -24,6 +24,7 @@
   "devtools_page": "devtools.html",
   "web_accessible_resources": [
     {
+      "use_dynamic_url": false,
       "resources": [
         "assets/logo192.png", 
         "assets/logo512.png", 
