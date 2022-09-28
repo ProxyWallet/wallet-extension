@@ -23,7 +23,12 @@ function Popup() {
 
   useEffect(() => {
     chrome.storage.sync.get(['pk'], function (result) {
-      setAccountPrivateKey(result.pk);
+      console.log('res',result.pk)
+      if(result.pk){
+        setAccountPrivateKey(result.pk);
+      } else {
+        setAccountPrivateKey(undefined);
+      }
     });
     if (accountPrivateKey) {
       createSigner(accountPrivateKey);
