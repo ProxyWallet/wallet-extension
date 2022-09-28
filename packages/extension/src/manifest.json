@@ -16,7 +16,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["contentScript.bundle.js"],
+      "js": ["browser-polyfill.js", "contentScript.bundle.js"],
       "run_at": "document_end"
     }
   ],
@@ -24,13 +24,12 @@
   "devtools_page": "devtools.html",
   "web_accessible_resources": [
     {
-      "use_dynamic_url": false,
       "resources": [
         "assets/logo192.png", 
         "assets/logo512.png", 
         "inject.bundle.js"
       ],
-      "matches": []
+      "matches": ["<all_urls>"]
     }
   ],
   "permissions": ["storage"]

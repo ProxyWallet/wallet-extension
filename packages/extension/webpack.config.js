@@ -125,6 +125,9 @@ var options = {
     new CopyWebpackPlugin({
       patterns: [
         {
+          from: '../../node_modules/webextension-polyfill/dist/browser-polyfill.js',
+        },
+        {
           from: 'src/manifest.json',
           to: path.join(__dirname, 'build'),
           force: true,
@@ -139,10 +142,6 @@ var options = {
             );
           },
         },
-      ],
-    }),
-    new CopyWebpackPlugin({
-      patterns: [
         {
           // TODO: maybe need to change
           from: 'src/assets/**/*.*',
