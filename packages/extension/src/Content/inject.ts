@@ -1,5 +1,7 @@
+import EthereumProviderInject from "../providers/inject";
 
-
-(window as any ).test = { 
-    foo: 'bar'
-}
+EthereumProviderInject(window, {
+    sendMessageHandler: async (msg) => {
+        console.log('Ethereum provider send handle', msg)
+    }
+})
