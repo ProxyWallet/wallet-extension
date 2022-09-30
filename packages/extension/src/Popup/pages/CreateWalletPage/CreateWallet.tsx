@@ -10,7 +10,9 @@ const CreateWalletPage = (props: any) => {
     const wallet = ethers.Wallet.createRandom();
 
     setCreatedWalled(wallet);
-  }
+
+ }
+
   return (
     <div>
       <button

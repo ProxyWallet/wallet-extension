@@ -1,3 +1,4 @@
+
 import React, { useContext, useState } from 'react';
 
 import { Context } from '../../Context';
@@ -13,6 +14,7 @@ const MainPage = (props: any) => {
     const tx = await NFTContract._listingsLastIndex();
     alert(tx);
   }
+
   function logOut() {
     setSigner(undefined)
     setLoggedIn(!loggedIn);
@@ -53,9 +55,6 @@ const MainPage = (props: any) => {
         >
           Test contract interaction
         </button>
-      </div>
-      <div>
-
       </div>
     </div>
   );

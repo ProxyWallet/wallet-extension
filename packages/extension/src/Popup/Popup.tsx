@@ -10,6 +10,7 @@ import { ethers, Wallet } from 'ethers';
 import EnterPasswordPage from './pages/EnterPasswordPage/EnterPasswordPage';
 import CreateWalletPage from './pages/CreateWalletPage/CreateWallet';
 
+
 function Popup() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [accountPrivateKey, setAccountPrivateKey] = useState();
@@ -28,6 +29,7 @@ function Popup() {
       goTo(EnterPasswordPage);
     }
   }, [accountPrivateKey, loggedIn, signer]);
+
 
   return (
     <>
