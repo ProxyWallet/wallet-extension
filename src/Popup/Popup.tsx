@@ -7,36 +7,27 @@ import { Context } from './Context';
 import AuthenticationPage from './pages/AuthenticationPage/AuthenticationPage';
 import MainPage from './pages/MainPage/MainPage';
 import { ethers, Wallet } from 'ethers';
+import EnterPasswordPage from './pages/EnterPasswordPage/EnterPasswordPage';
+import CreateWalletPage from './pages/CreateWalletPage/CreateWallet';
 
 function Popup() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [accountPrivateKey, setAccountPrivateKey] = useState();
   const [signer, setSigner] = useState<Wallet>();
 
-  function createSigner(accountPrivateKey: any) {
-    const alchemyProvider = new ethers.providers.AlchemyProvider( //move to .env
-      'goerli',
-      'oddBTGV5Pb8AW_EWk7CJSSDxTwjfUlE9'
-    );
-    setSigner(new ethers.Wallet(accountPrivateKey, alchemyProvider));
-  }
-
   useEffect(() => {
-    chrome.storage.sync.get(['pk'], function (result) {
-      console.log('res',result.pk)
-      if(result.pk){
-        setAccountPrivateKey(result.pk);
-      } else {
-        setAccountPrivateKey(undefined);
-      }
+    chrome.storage.sync.get(['AesPk'], function (result) {
+      setAccountPrivateKey(result.AesPk);
     });
-    if (accountPrivateKey) {
-      createSigner(accountPrivateKey);
+
+    if (signer) {
       goTo(MainPage);
+    } else if (!accountPrivateKey) {
+      goTo(CreateWalletPage);
     } else {
-      goTo(AuthenticationPage);
+      goTo(EnterPasswordPage);
     }
-  }, [accountPrivateKey, loggedIn]);
+  }, [accountPrivateKey, loggedIn, signer]);
 
   return (
     <>
@@ -45,6 +36,7 @@ function Popup() {
           loggedIn,
           setLoggedIn,
           signer,
+          setSigner,
         }}
       >
         <div>
