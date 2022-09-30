@@ -15,3 +15,9 @@ render(
 );
 
 if ((module as any).hot) (module as any).hot.accept();
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('PopUp handle', message, sender)
+  sendResponse({ foo: 'bar' })
+  return true;
+});

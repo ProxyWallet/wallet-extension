@@ -7,8 +7,8 @@ import {
     EnkryptProviderEventMethods,
     RPCRequestType,
     EthereumProvider,
-} from "../../providers/types";
-import { getError } from "../errors";
+} from "../../lib/providers/types";
+// import { getError } from "../errors";
 
 const subscriptionMap: Record<string, any> = {};
 
@@ -34,7 +34,7 @@ const handleIncomingMessage: HandleIncomingMessageFunction = (
             } else {
                 _provider.emit(
                     EmitEvent.disconnect,
-                    getError(jsonMsg.params[1] as number)
+                    // getError(jsonMsg.params[1] as number)
                 );
             }
         } else if (jsonMsg.method === MessageMethod.changeChainId) {

@@ -1,5 +1,3 @@
-setTimeout(() => {
-    console.log('This is the background page.');
-    console.log('Put the background scripts here.');
-}, 1000)
+import { backgroundOnMessage } from "../lib/message-bridge/bridge";
 
+backgroundOnMessage(async () => { })

@@ -1,5 +1,5 @@
 import EventEmitter from "eventemitter3";
-import { handleIncomingMessage } from "../libs/message-handlers/message-handler";
+import { handleIncomingMessage } from "../message-handlers/message-handler";
 
 import {
   EthereumRequest,
@@ -20,10 +20,10 @@ export class Provider extends EventEmitter implements ProviderInterface {
   isMetaMask: boolean;
   selectedAddress: string | null;
   connected: boolean;
-  
+  autoRefreshOnNetworkChange = false;
+
   readonly name = 'ethereum' as const;
   readonly version: string = '0.0.1' as const; // TODO move to config
-  autoRefreshOnNetworkChange = false;
   sendMessageHandler: SendMessageHandler;
   constructor(options: ProviderOptions) {
     super();
@@ -86,20 +86,21 @@ export class Provider extends EventEmitter implements ProviderInterface {
       .catch((err) => callback(err));
   }
   handleMessage(msg: string): void {
+    console.log('handleMessage');
     handleIncomingMessage(this, msg);
   }
 }
 
-const ProxyHandler = {
-  proxymethods: ["request", "sendAsync", "send"],
-  writableVars: ["autoRefreshOnNetworkChange"],
+class ProviderProxyHandler implements ProxyHandler<Provider> {
+  private readonly proxymethods = ["request", "sendAsync", "send"];
+  private readonly writableVars = ["autoRefreshOnNetworkChange"];
   ownKeys(target: Provider) {
     return Object.keys(target).concat(this.proxymethods);
-  },
+  }
   set(target: Provider, name: keyof Provider, value: any) {
     if (!this.ownKeys(target).includes(name)) this.proxymethods.push(name);
     return Reflect.set(target, name, value);
-  },
+  }
   getOwnPropertyDescriptor(target: Provider, name: keyof Provider) {
     return {
       value: this.get(target, name),
@@ -107,16 +108,16 @@ const ProxyHandler = {
       writable: this.writableVars.includes(name),
       enumerable: true,
     };
-  },
+  }
   get(target: Provider, prop: keyof Provider) {
     if (typeof target[prop] === "function") {
       return (target[prop] as () => any).bind(target);
     }
     return target[prop];
-  },
+  }
   has(target: Provider, name: keyof Provider) {
     return this.ownKeys(target).includes(name);
-  },
+  }
 };
 
 const injectDocument = (
@@ -124,6 +125,7 @@ const injectDocument = (
   options: ProviderOptions
 ): void => {
   const provider = new Provider(options);
-  window[provider.name] = new Proxy(provider, ProxyHandler); //proxy is needed due to web3js 1.3.0 callbackify issue. Used in superrare
+  window[provider.name] = new Proxy(provider, new ProviderProxyHandler()); //proxy is needed due to web3js 1.3.0 callbackify issue. Used in superrare
+  window.undasWallet.provider = provider;
 };
 export default injectDocument;
