@@ -1,7 +1,7 @@
 
 import browser from "webextension-polyfill";
-import { windowOnMessage, sendMessageFromСsToBackground } from "../lib/message-bridge/bridge";
-import { WindowPostMessagePayload, WindowPostMessagePayloadType } from "../lib/message-bridge/types";
+import { sendMessageFromСsToBackground, initWindowBridge, CS_WINDOW_BRIDGE, } from "../lib/message-bridge/bridge";
+import { PostMessageDestination, RuntimePostMessagePayload, WindowPostMessagePayload, WindowPostMessagePayloadType, } from "../lib/message-bridge/types";
 
 function injectScript() {
   try {
@@ -25,18 +25,34 @@ function injectScript() {
   }
 }
 
-windowOnMessage(
-  async (msg) => {
-    // console.log('CS msg handle: ', msg);
-    const resp = await sendMessageFromСsToBackground(msg);
-    // console.log('CS msg response', resp);
+const onWindowMessage = async (...args: any[]) => {
+  const payload = args[0] as WindowPostMessagePayload;
 
-    window.postMessage(new WindowPostMessagePayload({
-      msg: resp,
-      type: WindowPostMessagePayloadType.RESPONSE
-    }).toJson());
-  },
-  WindowPostMessagePayloadType.REQUEST
-)
+  console.log('onWindowMessage', args);
+
+
+  if (
+    !payload ||
+    payload.type !== WindowPostMessagePayloadType.REQUEST
+  ) {
+    console.debug('CS onWindowMessage: unsatisfied payload');
+    return;
+  }
+
+  // console.log('CS msg handle: ', msg);
+  const resp = await sendMessageFromСsToBackground(payload.msg);
+
+  console.log('WindowToCS Request', resp);
+
+  window.postMessage(new WindowPostMessagePayload({
+    msg: resp,
+    type: WindowPostMessagePayloadType.RESPONSE,
+    reqUid: payload.reqUid
+  }).toJson());
+}
+
+initWindowBridge('content-script');
+
+CS_WINDOW_BRIDGE.windowSubscribeRequest(onWindowMessage)
 
 injectScript();

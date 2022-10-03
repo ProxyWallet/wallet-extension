@@ -1,59 +1,101 @@
-import { SendMessageHandler } from "../providers/types";
-import { WindowPostMessagePayload, WindowPostMessagePayloadType } from "./types";
+import { EventEmitter } from "eventemitter3";
+import { EthereumRequest, JsonRpcRequest, SendMessageHandler } from "../providers/types";
+import { generateUuid } from "../utils/uuid";
+import { PostMessageDestination, RuntimePostMessagePayload, WindowCSMessageBridge, WindowPostMessagePayload, WindowPostMessagePayloadType } from "./types";
 
 export function windowOnMessage(
-    callback: (msg: string) => Promise<void>,
-    type: WindowPostMessagePayloadType,
-    once: boolean = false) {
+    callback: (msg: WindowPostMessagePayload) => Promise<void>) {
+
     const handleMessage = (event: MessageEvent) => {
-        if (event.origin !== window.origin) return;
-
+        console.log('handleMessage', event.data)
+        // if (event.origin !== window.origin) return;
         const msg = WindowPostMessagePayload.fromJson(event.data);
-        if (msg.type !== type) return;
 
-        callback(msg.msg ?? '');
+        if (msg) {
+            callback(msg);
+        } else {
+            console.debug('bridge: cannot parse msg')
+        }
     }
 
-    window.addEventListener('message', handleMessage, once);
+    window.addEventListener('message', handleMessage, false);
 }
 
-export const sendMessageFromСsToBackground: SendMessageHandler = async (message) => {
-    return new Promise((resolve, _) => {
-        chrome.runtime.sendMessage(message, (response) => {
+export const sendMessageFromСsToBackground = async <TMsg = any, TReturn = any>(msg: TMsg) => {
+    return new Promise<TReturn>((resolve, _) => {
+        chrome.runtime.sendMessage(new RuntimePostMessagePayload<TMsg>({
+            msg: msg,
+            destination: PostMessageDestination.BACKGROUND
+        }), (response) => {
+            console.log('bg response', response)
             resolve(response);
         })
     })
 }
 
 export const backgroundOnMessage = async (
-    callback: (msg: string) => Promise<void>
+    // callback: (msg: string) => Promise<void>
 ) => {
     chrome.runtime.onMessage.addListener(function (
-        request,
+        request: RuntimePostMessagePayload,
         sender,
         sendResponse
     ) {
-        sendResponse({
-            // todo
-            foo: 'bar'
-        });
+        console.log('req', request)
+        if (request.destination !== PostMessageDestination.BACKGROUND) return;
+
+        console.log('BG sender', sender);
+
+        const msg = JSON.parse(request.msg ?? '{}') as EthereumRequest;
+
+        console.log('ethereum request', msg);
+
+        if (msg.method === 'eth_chainId') {
+            sendResponse('1');
+        } else {
+            sendResponse(JSON.stringify({
+                // todo
+                val: Math.random() * 1000
+            }));
+        }
     });
+}
+
+export let CS_WINDOW_BRIDGE: WindowCSMessageBridge;
+
+export const initWindowBridge = (prefix?: string) => {
+    CS_WINDOW_BRIDGE = new WindowCSMessageBridge(prefix);
 }
 
 export const sendMessageFromWindowToCS: SendMessageHandler = async (message) => {
     return new Promise((resolve, _) => {
-        windowOnMessage(
-            async (msg) => {
-                // console.log('inner handler', msg)
-                resolve(msg)
-            },
-            WindowPostMessagePayloadType.RESPONSE,
-            true
-        )
+        const reqUid = generateUuid();
+
+        const resp = (...args: any[]) => {
+            const payload = args[0] as WindowPostMessagePayload;
+
+            if (!payload ||
+                payload.reqUid !== reqUid ||
+                payload.type !== WindowPostMessagePayloadType.RESPONSE) {
+                console.debug('sendMessageFromWindowToCS: invalid resp payload');
+                return;
+            }
+
+            const msg = payload.msg;
+
+            console.log('WindowToCS response', msg)
+
+            CS_WINDOW_BRIDGE.windowUnSubscribeResponse(resp, this);
+
+            resolve(msg)
+        }
+
+        CS_WINDOW_BRIDGE.windowSubscribeResponse(resp, this);
 
         window.postMessage(new WindowPostMessagePayload({
             msg: message,
-            type: WindowPostMessagePayloadType.REQUEST
+            type: WindowPostMessagePayloadType.REQUEST,
+            reqUid
         }).toJson());
     })
 }
