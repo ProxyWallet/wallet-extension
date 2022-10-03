@@ -41,8 +41,8 @@ var options = {
     options: path.join(__dirname, 'src', 'Options', 'index'),
     popup: path.join(__dirname, 'src', 'Popup', 'index'),
     background: path.join(__dirname, 'src', 'Background', 'index'),
-    contentScript: path.join(__dirname, 'src', 'Content', 'content'),
     inject: path.join(__dirname, 'src', 'Content', 'inject'),
+    contentScript: path.join(__dirname, 'src', 'Content', 'content'),
     devtools: path.join(__dirname, 'src', 'Devtools', 'index'),
     panel: path.join(__dirname, 'src', 'Panel', 'index'),
   },
@@ -125,6 +125,9 @@ var options = {
     new CopyWebpackPlugin({
       patterns: [
         {
+          from: '../../node_modules/webextension-polyfill/dist/browser-polyfill.js',
+        },
+        {
           from: 'src/manifest.json',
           to: path.join(__dirname, 'build'),
           force: true,
@@ -139,10 +142,6 @@ var options = {
             );
           },
         },
-      ],
-    }),
-    new CopyWebpackPlugin({
-      patterns: [
         {
           // TODO: maybe need to change
           from: 'src/assets/**/*.*',

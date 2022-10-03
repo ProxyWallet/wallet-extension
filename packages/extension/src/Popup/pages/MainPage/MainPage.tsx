@@ -1,13 +1,14 @@
-import React, { useContext } from 'react';
+
+import React, { useContext, useState } from 'react';
 
 import { Context } from '../../Context';
+import { clearPkFromStorage } from '../../storageUtils/utils';
 import { Marketplace__factory } from '../../testContractFactory/Marketplace__factory';
 
 const MainPage = (props: any) => {
-  const { loggedIn, setLoggedIn, signer } = useContext<any>(Context);
+  const { loggedIn, setLoggedIn, signer,setSigner } = useContext<any>(Context);
 
   async function interactWithContract() {
-    //test contract
     const CONTRACT_ADDRESS = '0xA24a7E2beed00E65C6B44006C7cfd6c7E8409c6A';
     const NFTContract = Marketplace__factory.connect(CONTRACT_ADDRESS, signer);
     const tx = await NFTContract._listingsLastIndex();
@@ -15,14 +16,14 @@ const MainPage = (props: any) => {
   }
 
   function logOut() {
-    chrome.storage.sync.remove(['pk']);
+    setSigner(undefined)
     setLoggedIn(!loggedIn);
   }
 
   return (
     <div>
       <div className="flex flex-col w-2/5">
-        {signer.address ? (
+        {signer ? (
           <h2>
             {signer.address.slice(0, 4)} ... {signer.address.slice(38, 42)}
           </h2>
@@ -55,7 +56,6 @@ const MainPage = (props: any) => {
           Test contract interaction
         </button>
       </div>
-      <div></div>
     </div>
   );
 };
