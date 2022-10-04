@@ -36,9 +36,15 @@ export class WindowPostMessagePayload {
     }
 }
 
+export enum RuntimePostMessagePayloadType {
+    INTERNAL = 'internal',
+    EXTERNAL = 'external'
+}
+
 export class RuntimePostMessagePayload<TMsg = any> {
     public destination?: PostMessageDestination = PostMessageDestination.CONTENT_SCRIPT;
     public msg?: TMsg = undefined;
+    public type: RuntimePostMessagePayloadType = RuntimePostMessagePayloadType.EXTERNAL;
 
     constructor(
         init: Partial<RuntimePostMessagePayload>

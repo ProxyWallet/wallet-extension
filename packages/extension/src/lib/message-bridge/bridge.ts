@@ -33,8 +33,11 @@ export const sendMessageFromСsToBackground = async <TMsg = any, TReturn = any>(
     })
 }
 
+export type BackgroundOnMessageCallback =
+    (request: RuntimePostMessagePayload, sender: chrome.runtime.MessageSender) => Promise<any>
+
 export const backgroundOnMessage = async (
-    // callback: (msg: string) => Promise<void>
+    callback: BackgroundOnMessageCallback
 ) => {
     chrome.runtime.onMessage.addListener(function (
         request: RuntimePostMessagePayload,
@@ -44,20 +47,9 @@ export const backgroundOnMessage = async (
         console.log('req', request)
         if (request.destination !== PostMessageDestination.BACKGROUND) return;
 
-        console.log('BG sender', sender);
+        callback(request, sender).then(sendResponse);
 
-        const msg = JSON.parse(request.msg ?? '{}') as EthereumRequest;
-
-        console.log('ethereum request', msg);
-
-        if (msg.method === 'eth_chainId') {
-            sendResponse('1');
-        } else {
-            sendResponse(JSON.stringify({
-                // todo
-                val: Math.random() * 1000
-            }));
-        }
+        return true;
     });
 }
 

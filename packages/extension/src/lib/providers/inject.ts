@@ -1,5 +1,5 @@
 import EventEmitter from "eventemitter3";
-import { handleIncomingMessage } from "../message-handlers/message-handler";
+import { handleIncomingMessage } from "../message-handlers/injected-provider-message-handler";
 
 import {
   EthereumRequest,

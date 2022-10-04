@@ -7,7 +7,7 @@ import {
     EnkryptProviderEventMethods,
     RPCRequestType,
     EthereumProvider,
-} from "../../lib/providers/types";
+} from "../providers/types";
 import { getError } from "../errors";
 
 const subscriptionMap: Record<string, any> = {};
