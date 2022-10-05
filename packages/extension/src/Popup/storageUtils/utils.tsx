@@ -1,7 +1,16 @@
 import { ethers } from 'ethers';
+import LocalForageLib from 'localforage';
+import Storage from '../../lib/storage/index';
+import LocalForage from '../../lib/storage/local-forage';
+// @ts-ignore
+import DummyDriver from '../../lib/storage/dummyDriver';
 var CryptoJS = require('crypto-js');
 
-export function createPasswordForMnemonic(
+LocalForageLib.defineDriver(DummyDriver);
+const localForage = new LocalForage('walletUndas');
+const walletStorage = new Storage('walletStorage', { storage: localForage });
+
+export async function createPasswordForMnemonic(
   mnemonicPhrase: string,
   password: any
 ) {
@@ -10,20 +19,15 @@ export function createPasswordForMnemonic(
     wallet.privateKey,
     password
   ).toString();
+  await walletStorage.set('AesPk', cryptedPrivateKey);
+  console.log('32131231',await walletStorage.get('AesPk'));
 
-  chrome.storage.sync.set({ AesPk: cryptedPrivateKey }, function () {
-    console.log('cryptedPrivateKey ' + cryptedPrivateKey);
-  });
 }
 
 export async function decryptPrivatKeyViaPassword(password: any) {
-  let cryptedPk = await chrome.storage.sync
-    .get('AesPk')
-    .then(function (result) {
-      if (result.AesPk) {
-        return result.AesPk;
-      }
-    });
+  const cryptedPk = await walletStorage.get('AesPk');
+
+  if (!cryptedPk) return console.log('!aesPk');
 
   const decryptedPrivateKey = CryptoJS.AES.decrypt(
     cryptedPk,
@@ -33,14 +37,16 @@ export async function decryptPrivatKeyViaPassword(password: any) {
   return decryptedPrivateKey;
 }
 
-export function isPresentCryptedPrivateKeyAtStorage() {
+export async function isPresentCryptedPrivateKeyAtStorage() {
   let isPresent: Boolean = false;
-  chrome.storage.sync.get(['AesPk'], function (result) {
-    if (result.AesPk) {
+  const cryptedPk = await walletStorage.get('AesPk');
+  console.log('walletStorag',walletStorage)
+  console.log('cryptedPk',cryptedPk)
+
+    if (cryptedPk) {
       isPresent = true;
     }
-  });
-
+  
   return isPresent;
 }
 
