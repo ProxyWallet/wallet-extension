@@ -1,22 +1,23 @@
 import React from 'react';
-import { Link } from 'react-chrome-extension-router';
-
-import CreateWalletPage from '../CreateWalletPage/CreateWallet';
-import Login from '../LoginPage/LoginPage';
+import { useNavigate } from 'react-router-dom';
 
 const AuthenticationPage = (props: any) => {
+  const navigate = useNavigate();
+
   return (
     <div className="flex flex-col ">
-      <Link component={Login}>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Login
-        </button>
-      </Link>
-      <Link component={CreateWalletPage}>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Create Wallet
-        </button>
-      </Link>
+      <button
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        onClick={() => navigate('./login-page')}
+      >
+        Login
+      </button>
+      <button
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        onClick={() => navigate('./create-wallet')}
+      >
+        Create Wallet
+      </button>
     </div>
   );
 };

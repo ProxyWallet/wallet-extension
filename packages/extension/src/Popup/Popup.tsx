@@ -1,43 +1,38 @@
 import './Popup.css';
 
 import React, { useEffect, useState } from 'react';
-import { Router, goTo } from 'react-chrome-extension-router';
-
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import { Context } from './Context';
 import AuthenticationPage from './pages/AuthenticationPage/AuthenticationPage';
 import MainPage from './pages/MainPage/MainPage';
-import { ethers, Wallet } from 'ethers';
+import { Wallet } from 'ethers';
+import EnterPasswordPage from './pages/EnterPasswordPage/EnterPasswordPage';
+import CreateWalletPage from './pages/CreateWalletPage/CreateWallet';
+import { isPresentCryptedPrivateKeyAtStorage } from './storageUtils/utils';
+import LoginPage from './pages/LoginPage/LoginPage';
 
 function Popup() {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [accountPrivateKey, setAccountPrivateKey] = useState();
+  const [accountPrivateKey, setAccountPrivateKey] = useState<any>();
   const [signer, setSigner] = useState<Wallet>();
-
-  function createSigner(accountPrivateKey: any) {
-    const alchemyProvider = new ethers.providers.AlchemyProvider( //move to .env
-      'goerli',
-      'oddBTGV5Pb8AW_EWk7CJSSDxTwjfUlE9'
-    );
-    setSigner(new ethers.Wallet(accountPrivateKey, alchemyProvider));
-  }
+  const navigate = useNavigate();
 
   useEffect(() => {
-    chrome.storage.sync.get(['pk'], function (result) {
-      console.log('res',result.pk)
-      if(result.pk){
-        setAccountPrivateKey(result.pk);
-      } else {
-        setAccountPrivateKey(undefined);
-      }
-    });
-    if (accountPrivateKey) {
-      createSigner(accountPrivateKey);
-      goTo(MainPage);
-    } else {
-      goTo(AuthenticationPage);
-    }
-  }, [accountPrivateKey, loggedIn]);
+    const getUsers = async () => {
+      const aesPk = await isPresentCryptedPrivateKeyAtStorage();
+      setAccountPrivateKey(aesPk);
+    };
 
+    getUsers();
+
+    if (signer) {
+      navigate('/main');
+    } else if (accountPrivateKey) {
+      navigate('./enter-password');
+    } else {
+      navigate('./');
+    }
+  }, [accountPrivateKey, loggedIn, signer]);
   return (
     <>
       <Context.Provider
@@ -45,12 +40,20 @@ function Popup() {
           loggedIn,
           setLoggedIn,
           signer,
+          setSigner,
         }}
       >
         <div>
-          <Router>
-            <AuthenticationPage />
-          </Router>
+          <Routes>
+            <Route path="/" element={<AuthenticationPage />}></Route>
+            <Route path="/main" element={<MainPage />}></Route>
+            <Route path="/create-wallet" element={<CreateWalletPage />}></Route>
+            <Route
+              path="/enter-password"
+              element={<EnterPasswordPage />}
+            ></Route>
+            <Route path="/login-page" element={<LoginPage />}></Route>
+          </Routes>
         </div>
       </Context.Provider>
     </>

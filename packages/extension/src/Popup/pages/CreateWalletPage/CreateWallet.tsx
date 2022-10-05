@@ -1,18 +1,17 @@
 import { ethers } from 'ethers';
 import React, { useState } from 'react';
-import { goBack, goTo } from 'react-chrome-extension-router';
-import LoginPage from '../LoginPage/LoginPage';
+import { useNavigate } from 'react-router-dom';
 
 const CreateWalletPage = (props: any) => {
   const [createdWallet, setCreatedWalled] = useState<any>();
+  const navigate = useNavigate();
 
   function createWallet() {
     const wallet = ethers.Wallet.createRandom();
 
     setCreatedWalled(wallet);
-    sessionStorage.setItem('address', wallet.address);
   }
-  console.log(createdWallet);
+
   return (
     <div>
       <button
@@ -33,16 +32,16 @@ const CreateWalletPage = (props: any) => {
       )}
       <button
         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        onClick={() => goBack()}
+        onClick={() => navigate(-1)}
       >
         Back
       </button>
       {createdWallet ? (
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => goTo(LoginPage)}
+          onClick={() => navigate('/login-page')}
         >
-          LogIN
+          Next
         </button>
       ) : (
         ''
