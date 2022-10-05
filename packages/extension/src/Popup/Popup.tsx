@@ -20,7 +20,6 @@ function Popup() {
   useEffect(() => {
     const getUsers = async () => {
       const aesPk = await isPresentCryptedPrivateKeyAtStorage();
-      console.log('aeaesPkaesPksPk',aesPk)
       setAccountPrivateKey(aesPk);
     };
 
@@ -29,11 +28,8 @@ function Popup() {
     if (signer) {
       navigate('/main');
     } else if (accountPrivateKey) {
-      console.log('qweqweqwe')
-
-      navigate('./enter-password');   
+      navigate('./enter-password');
     } else {
-      console.log('dasdasds')
       navigate('./');
     }
   }, [accountPrivateKey, loggedIn, signer]);
@@ -52,7 +48,10 @@ function Popup() {
             <Route path="/" element={<AuthenticationPage />}></Route>
             <Route path="/main" element={<MainPage />}></Route>
             <Route path="/create-wallet" element={<CreateWalletPage />}></Route>
-            <Route path="/enter-password" element={<EnterPasswordPage />}></Route>
+            <Route
+              path="/enter-password"
+              element={<EnterPasswordPage />}
+            ></Route>
             <Route path="/login-page" element={<LoginPage />}></Route>
           </Routes>
         </div>

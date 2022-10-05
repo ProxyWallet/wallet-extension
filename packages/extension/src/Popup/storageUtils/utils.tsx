@@ -1,12 +1,11 @@
 import { ethers } from 'ethers';
-import LocalForageLib from 'localforage';
+// import LocalForageLib from 'localforage';
 import Storage from '../../lib/storage/index';
 import LocalForage from '../../lib/storage/local-forage';
-// @ts-ignore
-import DummyDriver from '../../lib/storage/dummyDriver';
+
 var CryptoJS = require('crypto-js');
 
-LocalForageLib.defineDriver(DummyDriver);
+// LocalForageLib.defineDriver(DummyDriver);
 const localForage = new LocalForage('walletUndas');
 const walletStorage = new Storage('walletStorage', { storage: localForage });
 
@@ -20,7 +19,6 @@ export async function createPasswordForMnemonic(
     password
   ).toString();
   await walletStorage.set('AesPk', cryptedPrivateKey);
-  console.log('32131231',await walletStorage.get('AesPk'));
 
 }
 
@@ -40,8 +38,6 @@ export async function decryptPrivatKeyViaPassword(password: any) {
 export async function isPresentCryptedPrivateKeyAtStorage() {
   let isPresent: Boolean = false;
   const cryptedPk = await walletStorage.get('AesPk');
-  console.log('walletStorag',walletStorage)
-  console.log('cryptedPk',cryptedPk)
 
     if (cryptedPk) {
       isPresent = true;

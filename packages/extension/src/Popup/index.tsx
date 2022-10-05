@@ -4,7 +4,6 @@ import { HashRouter as Router} from 'react-router-dom';
 
 import Popup from './Popup';
 import './index.css';
-import MainPage from './pages/MainPage/MainPage';
 
 render(
   <React.StrictMode>
