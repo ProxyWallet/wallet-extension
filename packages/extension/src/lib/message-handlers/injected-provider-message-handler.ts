@@ -18,7 +18,15 @@ const handleIncomingMessage: HandleIncomingMessageFunction = (
 ): void => {
     try {
         const _provider = provider as EthereumProvider;
-        const jsonMsg = JSON.parse(message) as ProviderMessage;
+        let jsonMsg: ProviderMessage
+
+        try {
+            jsonMsg = JSON.parse(message) as ProviderMessage;
+        } catch (err) {
+            // just skipping all parsing errors
+            return;
+        }
+
         if (jsonMsg.method === MessageMethod.changeConnected) {
             const isConnected = jsonMsg.params[0] as boolean;
             _provider.connected = isConnected;

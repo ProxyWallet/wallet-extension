@@ -1,5 +1,6 @@
 import { EventEmitter } from "eventemitter3";
-import { windowOnMessage } from "./bridge";
+import { ProviderError } from "../providers/types";
+import { windowOnMessage } from "./event-bridge";
 
 export enum WindowPostMessagePayloadType {
     REQUEST = 'request',
@@ -9,7 +10,9 @@ export enum WindowPostMessagePayloadType {
 export enum PostMessageDestination {
     BACKGROUND = 'background',
     CONTENT_SCRIPT = 'content-script',
-    POPUP = 'popup'
+    POPUP = 'popup',
+    NEW_POPUP = 'new-popup',
+
 }
 
 export class WindowPostMessagePayload {
@@ -39,6 +42,11 @@ export class WindowPostMessagePayload {
 export enum RuntimePostMessagePayloadType {
     INTERNAL = 'internal',
     EXTERNAL = 'external'
+}
+
+export type RuntimeOnMessageResponse<TResult = any> = {
+    result?: TResult;
+    error?: ProviderError;
 }
 
 export class RuntimePostMessagePayload<TMsg = any> {

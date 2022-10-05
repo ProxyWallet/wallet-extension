@@ -1,6 +1,6 @@
 import EthereumProviderInject, { Provider } from "../lib/providers/inject";
 import { WindowPostMessagePayload, WindowPostMessagePayloadType } from "../lib/message-bridge/types";
-import { CS_WINDOW_BRIDGE, initWindowBridge, sendMessageFromWindowToCS as sendMessageHandler, windowOnMessage } from "../lib/message-bridge/bridge";
+import { CS_WINDOW_BRIDGE, initWindowBridge, sendMessageFromWindowToCS as sendMessageHandler, windowOnMessage } from "../lib/message-bridge/event-bridge";
 
 declare global {
     interface Window {
@@ -16,7 +16,7 @@ initWindowBridge('inject');
 
 const onWindowMessage = async (...args: any[]) => {
     const msg = args[0] as WindowPostMessagePayload;
-    console.log('WindowToCS Response Injected')
+    console.log('WindowToCS Response Injected', msg)
     window.undasWallet?.provider?.handleMessage(msg.msg ?? '');
 }
 

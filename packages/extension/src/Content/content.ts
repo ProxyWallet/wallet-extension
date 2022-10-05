@@ -1,6 +1,7 @@
 
 import browser from "webextension-polyfill";
-import { sendMessageFromСsToBackground, initWindowBridge, CS_WINDOW_BRIDGE, } from "../lib/message-bridge/bridge";
+import { sendRuntimeMessageToBackground } from "../lib/message-bridge/bridge";
+import { CS_WINDOW_BRIDGE, initWindowBridge } from "../lib/message-bridge/event-bridge";
 import { PostMessageDestination, RuntimePostMessagePayload, WindowPostMessagePayload, WindowPostMessagePayloadType, } from "../lib/message-bridge/types";
 
 function injectScript() {
@@ -40,9 +41,9 @@ const onWindowMessage = async (...args: any[]) => {
   }
 
   // console.log('CS msg handle: ', msg);
-  const resp = await sendMessageFromСsToBackground(payload.msg);
+  const resp = await sendRuntimeMessageToBackground(payload.msg);
 
-  console.log('WindowToCS Request', resp);
+  console.log('WindowToCS send response', resp);
 
   window.postMessage(new WindowPostMessagePayload({
     msg: resp,
