@@ -1,36 +1,38 @@
 import './Popup.css';
 
 import React, { useEffect, useState } from 'react';
-import { Router, goTo } from 'react-chrome-extension-router';
-
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import { Context } from './Context';
 import AuthenticationPage from './pages/AuthenticationPage/AuthenticationPage';
 import MainPage from './pages/MainPage/MainPage';
-import { ethers, Wallet } from 'ethers';
+import { Wallet } from 'ethers';
 import EnterPasswordPage from './pages/EnterPasswordPage/EnterPasswordPage';
 import CreateWalletPage from './pages/CreateWalletPage/CreateWallet';
-
+import { isPresentCryptedPrivateKeyAtStorage } from './storageUtils/utils';
+import LoginPage from './pages/LoginPage/LoginPage';
 
 function Popup() {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [accountPrivateKey, setAccountPrivateKey] = useState();
+  const [accountPrivateKey, setAccountPrivateKey] = useState<any>();
   const [signer, setSigner] = useState<Wallet>();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    chrome.storage.sync.get(['AesPk'], function (result) {
-      setAccountPrivateKey(result.AesPk);
-    });
+    const getUsers = async () => {
+      const aesPk = await isPresentCryptedPrivateKeyAtStorage();
+      setAccountPrivateKey(aesPk);
+    };
+
+    getUsers();
 
     if (signer) {
-      goTo(MainPage);
-    } else if (!accountPrivateKey) {
-      goTo(CreateWalletPage);
+      navigate('/main');
+    } else if (accountPrivateKey) {
+      navigate('./enter-password');
     } else {
-      goTo(EnterPasswordPage);
+      navigate('./');
     }
   }, [accountPrivateKey, loggedIn, signer]);
-
-
   return (
     <>
       <Context.Provider
@@ -42,9 +44,16 @@ function Popup() {
         }}
       >
         <div>
-          <Router>
-            <AuthenticationPage />
-          </Router>
+          <Routes>
+            <Route path="/" element={<AuthenticationPage />}></Route>
+            <Route path="/main" element={<MainPage />}></Route>
+            <Route path="/create-wallet" element={<CreateWalletPage />}></Route>
+            <Route
+              path="/enter-password"
+              element={<EnterPasswordPage />}
+            ></Route>
+            <Route path="/login-page" element={<LoginPage />}></Route>
+          </Routes>
         </div>
       </Context.Provider>
     </>

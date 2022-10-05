@@ -1,13 +1,13 @@
 import { ethers } from 'ethers';
 import React, { useContext, useState } from 'react';
-import { goBack, goTo } from 'react-chrome-extension-router';
+import { useNavigate } from 'react-router-dom';
 import { Context } from '../../Context';
 import { decryptPrivatKeyViaPassword } from '../../storageUtils/utils';
-import CreateWalletPage from '../CreateWalletPage/CreateWallet';
 
 const EnterPasswordPage = (props: any) => {
   const { loggedIn, setLoggedIn, signer, setSigner } = useContext<any>(Context);
   const [password, setPassword] = useState<string>();
+  const navigate = useNavigate();
 
   function createSigner(accountPrivateKey: any) {
     const alchemyProvider = new ethers.providers.AlchemyProvider( //move to .env
@@ -39,11 +39,11 @@ const EnterPasswordPage = (props: any) => {
         LogIn
       </button>
       <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            onClick={() => goTo(CreateWalletPage)}
-          >
-            Create new
-          </button>
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        onClick={() => navigate('/create-wallet')}
+      >
+        Create new
+      </button>
     </div>
   );
 };
