@@ -1,5 +1,5 @@
 import { EventEmitter } from "eventemitter3";
-import Browser from "webextension-polyfill";
+import Browser, { commands } from "webextension-polyfill";
 import { getCustomError, getError } from "../errors";
 import { handleBackgroundMessage, InternalBgMethods } from "../message-handlers/background-message-handler";
 import { getPopupPath, UIRoutes } from "../popup-routes";
@@ -8,7 +8,10 @@ import { generateUuid } from "../utils/uuid";
 import { PostMessageDestination, RuntimeOnMessageResponse, RuntimePostMessagePayload, RuntimePostMessagePayloadType, WindowCSMessageBridge, WindowPostMessagePayload, WindowPostMessagePayloadType } from "./types";
 
 export const sendMessageToNewPopupWindow = async <TMsg = any, TReturn = any>(tabId: number, msg: TMsg) => {
-    return <Promise<TReturn>>Browser.tabs.sendMessage(tabId, msg);
+    console.log('sendMessageToNewPopupWindow');
+    const res = await Browser.tabs.sendMessage(tabId, msg);
+    console.log('sendMessageToNewPopupWindow res', res)
+    return res as TReturn;
 }
 
 const sendRuntimeMessage = async <TMsg = any, TReturn = any>(destination: PostMessageDestination, msg: TMsg) => {
@@ -96,6 +99,8 @@ export const sendMessageFromBackgroundToBackground = async <TResp, TReq>(req: TR
 
 const UNLOCK_PATH = getPopupPath(UIRoutes.unlock.path);
 
+let currentWindowId: number | undefined;
+
 class WindowPromise {
     private async getRawResponse<TMsg, TResult>(
         url: string,
@@ -104,11 +109,17 @@ class WindowPromise {
     ): Promise<RuntimeOnMessageResponse<TResult>> {
         return new Promise((resolve) => {
             Browser.tabs.onUpdated.addListener(function listener(_tabId, info, tab) {
+                console.log('status: ', tab, url, _tabId, tabId)
+
                 if (info.status === "complete" && _tabId === tabId && tab.url === url) {
+                    console.log('status: completed')
                     resolve(
                         sendMessageToNewPopupWindow(
                             tabId,
-                            msg,
+                            new RuntimePostMessagePayload<TMsg>({
+                                msg,
+                                destination: PostMessageDestination.NEW_POPUP
+                            }),
                         )
                     );
                     Browser.tabs.onUpdated.removeListener(listener);
@@ -136,9 +147,13 @@ class WindowPromise {
             height: 600,
             width: 460,
         });
+        console.log(windowInfo)
+
         const tabId: number | undefined = windowInfo.tabs?.length
             ? windowInfo.tabs[0].id
             : 0;
+        console.log('tabId', tabId)
+
         if (typeof tabId === "undefined") {
             return Promise.resolve({
                 error: getCustomError("unknown error, no tabId"),
@@ -146,9 +161,13 @@ class WindowPromise {
         }
         const waitForWindow = async (): Promise<void> => {
             // eslint-disable-next-line no-empty
-            while ((await Browser.tabs.get(tabId)).status !== "complete") { }
+            while ((await Browser.tabs.get(tabId)).status !== "complete") {
+                console.log('status', (await Browser.tabs.get(tabId)).status)
+            }
         };
         await waitForWindow();
+        console.log('waitedForWindow')
+
         const monitorTabs = (): Promise<RuntimeOnMessageResponse> => {
             return new Promise((resolve) => {
                 Browser.tabs.onRemoved.addListener(function tabListener(_tabId) {
@@ -174,6 +193,8 @@ class WindowPromise {
             console.log('isKeyRingLockedd', isKeyRingLocked);
 
             if (unlockKeyring && isKeyRingLocked) {
+                console.log('unlock keyring', isKeyRingLocked);
+
                 const unlockKeyring = await this.getRawResponse(
                     Browser.runtime.getURL(UNLOCK_PATH),
                     msg,
@@ -202,6 +223,9 @@ class WindowPromise {
                 return res;
             });
         };
+
+        console.log('wait for promises')
+
         return Promise.race([monitorTabs(), executePromise()]);
     }
 }

@@ -10,6 +10,9 @@ import EnterPasswordPage from './pages/EnterPasswordPage/EnterPasswordPage';
 import CreateWalletPage from './pages/CreateWalletPage/CreateWallet';
 import { isPresentCryptedPrivateKeyAtStorage } from './storageUtils/utils';
 import LoginPage from './pages/LoginPage/LoginPage';
+import { ConnectDapp } from './pages/ConnectDapp';
+import { Loading } from './pages/Loading';
+import { UIRoutes } from '../lib/popup-routes';
 
 function Popup() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -46,7 +49,9 @@ function Popup() {
         <div>
           <Routes>
             <Route path="/" element={<AuthenticationPage />}></Route>
+            <Route path={UIRoutes.loading.path} element={<Loading />}></Route>
             <Route path="/main" element={<MainPage />}></Route>
+            <Route path={UIRoutes.ethConnectDApp.path} element={<ConnectDapp />}></Route>
             <Route path="/create-wallet" element={<CreateWalletPage />}></Route>
             <Route
               path="/enter-password"
