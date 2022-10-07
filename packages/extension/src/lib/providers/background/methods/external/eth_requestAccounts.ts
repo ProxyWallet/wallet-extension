@@ -6,9 +6,10 @@ import { EthereumRequest } from "../../../types";
 export const ethRequestAccounts = async (payload: EthereumRequest, type: RuntimePostMessagePayloadType) => {
     console.log('ethRequestAccounts');
     const window = new WindowPromise();
-    const accounts = await window.getResponse<string[]>(
-        getPopupPath(UIRoutes.ethConnectDApp.path),
-        { method: payload.method }, true);
-    // console.log('ethRequestAccounts accounts', accounts);
-    return accounts; // TODO: implement
+    const response =  // ['0xEC227cFE7485b9423B7e2eb30b813c7b5413a0f2']
+        await window.getResponse<string[]>(
+            getPopupPath(UIRoutes.ethConnectDApp.path),
+            { method: payload.method }, true);
+    console.log('ethRequestAccounts response', response);
+    return response.result;
 }

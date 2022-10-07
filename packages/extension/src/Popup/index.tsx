@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from 'react-dom';
-import { HashRouter as Router} from 'react-router-dom';
+import { HashRouter as Router } from 'react-router-dom';
 
 import Popup from './Popup';
 import './index.css';
@@ -10,21 +10,21 @@ import { RuntimeOnMessageResponse, RuntimePostMessagePayload } from '../lib/mess
 
 render(
   <React.StrictMode>
-      <Router>
-        <Popup/>
-      </Router>
+    <Router>
+      <Popup />
+    </Router>
   </React.StrictMode>,
   window.document.querySelector('#app-container')
 );
 
 if ((module as any).hot) (module as any).hot.accept();
 
-newPopupOnMessage((req: RuntimePostMessagePayload<EthereumRequest>) => {
-  return new Promise<RuntimeOnMessageResponse>((resolve) => {
-    console.log('newPopupOnMessage', req.msg);
+// newPopupOnMessage((req: RuntimePostMessagePayload<EthereumRequest>) => {
+//   return new Promise<RuntimeOnMessageResponse>((resolve) => {
+//     console.log('newPopupOnMessage', req.msg);
 
-    setTimeout(() => resolve({
-      result: ['0xEC227cFE7485b9423B7e2eb30b813c7b5413a0f2']
-    }), 5000)
-  })
-})
+//     setTimeout(() => resolve({
+//       result: ['0xEC227cFE7485b9423B7e2eb30b813c7b5413a0f2']
+//     }), 5000)
+//   })
+// })

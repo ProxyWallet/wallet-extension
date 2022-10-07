@@ -1,63 +1,77 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import Browser, { commands } from "webextension-polyfill";
-import { PostMessageDestination, RuntimePostMessagePayload } from "../../../lib/message-bridge/types";
-import { EthereumRequest } from "../../../lib/providers/types";
+import { getError } from "../../../lib/errors";
+import { newPopupOnMessage } from "../../../lib/message-bridge/bridge";
+import { PostMessageDestination, RuntimeOnMessageResponse, RuntimePostMessagePayload } from "../../../lib/message-bridge/types";
+import { ErrorCodes, EthereumRequest } from "../../../lib/providers/types";
 
-// const getCurrentWindowActiveTabIndex = async () => {
-//     const currentWindowActiveTabs = await Browser.tabs.query({
-//         currentWindow: true,
-//         active: true,
-//     });
+const getCurrentWindowActiveTabIndex = async () => {
+    const currentWindowActiveTabs = await Browser.tabs.query({
+        currentWindow: true,
+        active: true,
+    });
 
-//     if (!currentWindowActiveTabs.length)
-//         throw new Error();
+    if (!currentWindowActiveTabs.length)
+        throw new Error();
 
-//     console.log('getCurrentWindowActiveTabIndex', currentWindowActiveTabs)
-//     return currentWindowActiveTabs[0].id;
-// }
+    console.log('getCurrentWindowActiveTabIndex', currentWindowActiveTabs)
+    return currentWindowActiveTabs[0].id;
+}
+
+type PromiseResult = string[];
+
+type PromiseResultResolve = (res: any) => void;
+type PromiseResultReject = (reason?: any) => void;
 
 export const ConnectDapp: React.FC = () => {
-    const locationHref = window.location.href;
-    console.log('location href', locationHref)
     const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
-    type PromiseResult = string;
-    type PromiseResultResolve = (res: any) => void;
-    type PromiseResultReject = (reason?: any) => void;
+    const [reqPromise] = useState(
+        () => {
+            const funcs = {} as {
+                reject: PromiseResultReject | undefined;
+                resolve: PromiseResultResolve | undefined;
+            }
 
-    let reqResolve: PromiseResultResolve;
-    let reqReject: PromiseResultReject;
-
-    const reqPromise: Promise<PromiseResult> = new Promise((resolve, reject) => {
-        reqResolve = resolve
-        reqReject = reject;
-    })
-
-    const onTabMessage = async (msg: RuntimePostMessagePayload<EthereumRequest>, sender: Browser.Runtime.MessageSender) => {
-        if (msg.destination !== PostMessageDestination.NEW_POPUP) return;
-        // alert(JSON.stringify(msg));
-        setIsLoaded(true);
-        return reqPromise;
-    }
+            return {
+                funcs,
+                promise: new Promise<PromiseResult>((_resolve, _reject) => {
+                    funcs.resolve = _resolve;
+                    funcs.reject = _reject;
+                })
+            }
+        });
 
     const discardConnect = () => {
-        alert('discard connect')
-        reqReject();
+        alert('discard')
+        reqPromise.funcs?.reject?.(getError(ErrorCodes.userRejected));
     }
+
     const acceptConnect = () => {
-        alert('accept connect')
-        reqResolve(['0xEC227cFE7485b9423B7e2eb30b813c7b5413a0f2']);
+        alert('accept')
+        reqPromise.funcs.resolve?.(['0xEC227cFE7485b9423B7e2eb30b813c7b5413a0f2']);
+    }
+
+    const onTabMessage = async (_: RuntimePostMessagePayload<EthereumRequest>) => {
+        setIsLoaded(true);
+        return reqPromise.promise;
     }
 
     useEffect(() => {
-        Browser.runtime.onMessage.addListener(onTabMessage)
+        newPopupOnMessage<PromiseResult>(onTabMessage)
 
-        // getCurrentWindowActiveTabIndex()
-        //     .then(tabId => Browser.tabs.update(tabId, { url: locationHref })
-        //         .then(v => console.log('tab updated', v)));
+        getCurrentWindowActiveTabIndex().then(tabId => {
+            Browser.tabs.onRemoved.addListener(function tabListener(_tabId) {
+                if (_tabId === tabId) {
+                    Browser.tabs.onRemoved.removeListener(tabListener);
+                    Browser.runtime.onMessage.removeListener(onTabMessage);
+                }
+            })
+        })
 
         return () => {
-            Browser.runtime.onMessage.removeListener(onTabMessage)
+            // discardConnect()
+            Browser.runtime.onMessage.removeListener(onTabMessage);
         }
     }, [])
 
@@ -68,12 +82,12 @@ export const ConnectDapp: React.FC = () => {
                 <span>Loading (Waiting for incoming request from BG)</span>
             </> :
             <>
-                <div style={{
+                {/* <div style={{
                     display: 'inline-block'
-                }}>
-                    <button onClick={discardConnect}>Discard</button>
-                    <button onClick={acceptConnect}>Connect Dapp</button>
-                </div>
+                }}> */}
+                <input value={'Discard'} type={'button'} onClick={discardConnect} />
+                <input value={'Connect Dapp'} type={'button'} onClick={acceptConnect} />
+                {/* </div> */}
             </>
         }
 

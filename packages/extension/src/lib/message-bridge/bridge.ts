@@ -11,7 +11,7 @@ export const sendMessageToNewPopupWindow = async <TMsg = any, TReturn = any>(tab
     console.log('sendMessageToNewPopupWindow');
     const res = await Browser.tabs.sendMessage(tabId, msg);
     console.log('sendMessageToNewPopupWindow res', res)
-    return res as TReturn;
+    return res as RuntimeOnMessageResponse<TReturn>;
 }
 
 const sendRuntimeMessage = async <TMsg = any, TReturn = any>(destination: PostMessageDestination, msg: TMsg) => {
@@ -40,8 +40,8 @@ export type BackgroundOnMessageCallback =
 export type PopupOnMessageCallback =
     BackgroundOnMessageCallback
 
-export type NewPopupWindowOnMessageCallback =
-    (request: RuntimePostMessagePayload) => Promise<RuntimeOnMessageResponse>
+export type NewPopupWindowOnMessageCallback<TResult = any> =
+    (request: RuntimePostMessagePayload) => Promise<TResult>
 
 const runtimeOnMessage = (
     destination: PostMessageDestination,
@@ -76,15 +76,24 @@ export const popupOnMessage = async (
     runtimeOnMessage(PostMessageDestination.POPUP, callback)
 }
 
-export const newPopupOnMessage = async (
-    callback: NewPopupWindowOnMessageCallback
+export const newPopupOnMessage = async <TResult = any>(
+    callback: NewPopupWindowOnMessageCallback<TResult>
 ) => {
     Browser.runtime.onMessage.addListener(async (
         message: RuntimePostMessagePayload,
     ) => {
         if (message.destination !== PostMessageDestination.NEW_POPUP) return;
 
-        return callback(message)
+        // return callback(message);
+        try {
+            const result = await callback(message);
+            alert(result);
+            return { result } as RuntimeOnMessageResponse
+        } catch (error) {
+            alert(error);
+
+            return { error } as RuntimeOnMessageResponse
+        }
     });
 }
 
@@ -99,9 +108,11 @@ export const sendMessageFromBackgroundToBackground = async <TResp, TReq>(req: TR
 
 const UNLOCK_PATH = getPopupPath(UIRoutes.unlock.path);
 
-let currentWindowId: number | undefined;
+// let currentWindowId: number | undefined;
 
 class WindowPromise {
+    private _currentOpenedTab: number | undefined;
+
     private async getRawResponse<TMsg, TResult>(
         url: string,
         msg: TMsg,
@@ -140,14 +151,17 @@ class WindowPromise {
         msg: TMsg,
         unlockKeyring = false
     ): Promise<RuntimeOnMessageResponse<TResult>> {
+        const loadingPath = '/' + getPopupPath(UIRoutes.loading.path);
+        console.log('loadingPath', loadingPath)
         const windowInfo = await Browser.windows.create({
-            url: getPopupPath(UIRoutes.loading.path),
+
+            url: loadingPath,
             type: "popup",
             focused: true,
             height: 600,
             width: 460,
         });
-        console.log(windowInfo)
+        console.log('window info', windowInfo)
 
         const tabId: number | undefined = windowInfo.tabs?.length
             ? windowInfo.tabs[0].id
@@ -161,9 +175,7 @@ class WindowPromise {
         }
         const waitForWindow = async (): Promise<void> => {
             // eslint-disable-next-line no-empty
-            while ((await Browser.tabs.get(tabId)).status !== "complete") {
-                console.log('status', (await Browser.tabs.get(tabId)).status)
-            }
+            while ((await Browser.tabs.get(tabId)).status !== "complete") { }
         };
         await waitForWindow();
         console.log('waitedForWindow')
@@ -171,7 +183,9 @@ class WindowPromise {
         const monitorTabs = (): Promise<RuntimeOnMessageResponse> => {
             return new Promise((resolve) => {
                 Browser.tabs.onRemoved.addListener(function tabListener(_tabId) {
+                    console.log('onRemoved')
                     if (_tabId === tabId) {
+                        console.log('onRemoved matched tab')
                         Browser.tabs.onRemoved.removeListener(tabListener);
                         resolve({
                             error: getError(ErrorCodes.userRejected),

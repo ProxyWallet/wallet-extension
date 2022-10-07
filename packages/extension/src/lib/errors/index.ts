@@ -1,7 +1,11 @@
 import { assert } from "chai";
 import { ErrorCodes, JSONError, ProviderError } from "../providers/types";
 
-const errors: Record<number, any> = {
+export enum Errors {
+    REQUEST_REJECTED_BY_USER = 4001,
+}
+
+export const errors: Record<number, any> = {
     4001: {
         name: "User Rejected Request",
         description: "The user rejected the request.",

@@ -28,13 +28,13 @@ function Popup() {
 
     getUsers();
 
-    if (signer) {
-      navigate('/main');
-    } else if (accountPrivateKey) {
-      navigate('./enter-password');
-    } else {
-      navigate('./');
-    }
+    // if (signer) {
+    //   // navigate('/main');
+    // } else if (accountPrivateKey) {
+    //   navigate('./enter-password');
+    // } else {
+    //   navigate('./');
+    // }
   }, [accountPrivateKey, loggedIn, signer]);
   return (
     <>
@@ -49,9 +49,9 @@ function Popup() {
         <div>
           <Routes>
             <Route path="/" element={<AuthenticationPage />}></Route>
-            <Route path={UIRoutes.loading.path} element={<Loading />}></Route>
+            <Route path={'/' + UIRoutes.loading.path} element={<Loading />}></Route>
             <Route path="/main" element={<MainPage />}></Route>
-            <Route path={UIRoutes.ethConnectDApp.path} element={<ConnectDapp />}></Route>
+            <Route path={'/' + UIRoutes.ethConnectDApp.path} element={<ConnectDapp />}></Route>
             <Route path="/create-wallet" element={<CreateWalletPage />}></Route>
             <Route
               path="/enter-password"
