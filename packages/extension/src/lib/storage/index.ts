@@ -1,6 +1,11 @@
 import { BrowserStorageArea } from "./types";
 import LocalForage from "./local-forage";
 
+export enum StorageNamespaces {
+  CONNECTED_DOMAINS = 'connected-domains',
+  USER_ADDRESSES = 'user-addresses',
+}
+
 export interface StorageOptions {
   storage?: BrowserStorageArea;
 }
@@ -10,20 +15,20 @@ class Storage {
 
   private storage: BrowserStorageArea;
 
-  constructor(namespace:any, options: StorageOptions) {
+  constructor(namespace: any, options: StorageOptions = {}) {
     if (!options.storage) options.storage = new LocalForage(namespace);
     this.namespace = namespace;
     this.storage = options.storage;
   }
 
-  async get(key: string) {
+  async get<TReturn>(key: string) {
     const vals = await this.storage.get(this.namespace);
     if (vals[this.namespace] && vals[this.namespace][key])
-      return vals[this.namespace][key];
+      return vals[this.namespace][key] as TReturn;
     return null;
   }
 
-  async set(key: string, val: Record<string, any>) {
+  async set<TValue>(key: string, val: TValue) {
     let vals = await this.storage.get(this.namespace);
     vals = vals[this.namespace] ? vals[this.namespace] : {};
     vals[key] = val;

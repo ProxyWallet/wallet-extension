@@ -18,9 +18,9 @@ const getCurrentWindowActiveTabIndex = async () => {
     return currentWindowActiveTabs[0].id;
 }
 
-type PromiseResult = string[];
+type PromiseResult = boolean;
 
-type PromiseResultResolve = (res: any) => void;
+type PromiseResultResolve = (res: PromiseResult) => void;
 type PromiseResultReject = (reason?: any) => void;
 
 export const ConnectDapp: React.FC = () => {
@@ -49,7 +49,7 @@ export const ConnectDapp: React.FC = () => {
 
     const acceptConnect = () => {
         alert('accept')
-        reqPromise.funcs.resolve?.(['0xEC227cFE7485b9423B7e2eb30b813c7b5413a0f2']);
+        reqPromise.funcs.resolve?.(true);
     }
 
     const onTabMessage = async (_: RuntimePostMessagePayload<EthereumRequest>) => {

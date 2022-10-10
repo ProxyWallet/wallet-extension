@@ -39,7 +39,7 @@ const handleExternal: BackgroundOnMessageCallback = async (request, sender) => {
         payload.method == "eth_requestAccounts" ||
         payload.method == "eth_coinbase"
     ) {
-        return ethRequestAccounts(payload, request.type);
+        return ethRequestAccounts(payload, sender, request.type );
     } else {
         return makeRpcRequest(payload, request.type)
     }

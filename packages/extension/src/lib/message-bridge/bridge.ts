@@ -35,7 +35,7 @@ export const sendRuntimeMessageToPopup = <TMsg = any, TReturn = any>(msg: TMsg) 
 }
 
 export type BackgroundOnMessageCallback =
-    (request: RuntimePostMessagePayload, sender?: chrome.runtime.MessageSender) => Promise<any>
+    (request: RuntimePostMessagePayload, sender: chrome.runtime.MessageSender) => Promise<any>
 
 export type PopupOnMessageCallback =
     BackgroundOnMessageCallback
