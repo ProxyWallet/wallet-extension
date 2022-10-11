@@ -27,7 +27,7 @@ export const ethRequestAccounts: BackgroundOnMessageCallback<string[], EthereumR
 
     let connectedAddresses = await storageDomains.get<string[]>(domain)
 
-    const userSelectedAddress = await storageAddresses.get<string>('selectedAddress');
+    const userSelectedAddress = '0xEC227cFE7485b9423B7e2eb30b813c7b5413a0f2';  // await storageAddresses.get<string>('selectedAddress');
 
     if (!userSelectedAddress) {
         throw getCustomError('ethRequestAccounts: user selected address is null')

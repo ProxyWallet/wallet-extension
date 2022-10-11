@@ -1,6 +1,6 @@
 import { SendMessageHandler } from "../providers/types";
 import { generateUuid } from "../utils/uuid";
-import { WindowCSMessageBridge, WindowPostMessagePayload, WindowPostMessagePayloadType } from "./types";
+import { RuntimeOnMessageResponse, WindowCSMessageBridge, WindowPostMessagePayload, WindowPostMessagePayloadType } from "./types";
 
 export function windowOnMessage(
     callback: (msg: WindowPostMessagePayload) => Promise<void>) {
@@ -28,7 +28,7 @@ export const initWindowBridge = (prefix?: string) => {
 }
 
 export const sendMessageFromWindowToCS: SendMessageHandler = async (message) => {
-    return new Promise((resolve, _) => {
+    return new Promise((resolve, reject) => {
         const reqUid = generateUuid();
 
         const resp = (...args: any[]) => {
@@ -40,14 +40,17 @@ export const sendMessageFromWindowToCS: SendMessageHandler = async (message) => 
                 console.debug('sendMessageFromWindowToCS: invalid resp payload');
                 return;
             }
+            console.log('WindowToCS response', payload)
 
-            const msg = payload.msg;
+            const respPayload = JSON.parse(payload.msg) as RuntimeOnMessageResponse;
 
-            console.log('WindowToCS response', msg)
 
             CS_WINDOW_BRIDGE.windowUnSubscribeResponse(resp, this);
 
-            resolve(msg)
+            if(respPayload.error)
+                reject(respPayload.error)
+            else 
+                resolve(respPayload.result)
         }
 
         CS_WINDOW_BRIDGE.windowSubscribeResponse(resp, this);

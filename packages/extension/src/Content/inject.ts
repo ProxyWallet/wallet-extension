@@ -19,7 +19,7 @@ const onWindowMessage = async (...args: any[]) => {
     console.log('WindowToCS Response Injected', msg)
     window.undasWallet?.provider?.handleMessage(msg.msg ?? '');
 }
-
+// TODO: revise
 CS_WINDOW_BRIDGE.windowSubscribeResponse(onWindowMessage)
 
 EthereumProviderInject(window, {

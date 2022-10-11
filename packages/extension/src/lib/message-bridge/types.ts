@@ -17,7 +17,7 @@ export enum PostMessageDestination {
 
 export class WindowPostMessagePayload {
     public type: WindowPostMessagePayloadType = WindowPostMessagePayloadType.REQUEST;
-    public msg?: string = undefined;
+    public msg: string = '';
     public reqUid?: string = undefined;
 
     constructor(

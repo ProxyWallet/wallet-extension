@@ -3,6 +3,7 @@ import browser from "webextension-polyfill";
 import { sendRuntimeMessageToBackground } from "../lib/message-bridge/bridge";
 import { CS_WINDOW_BRIDGE, initWindowBridge } from "../lib/message-bridge/event-bridge";
 import { PostMessageDestination, RuntimePostMessagePayload, WindowPostMessagePayload, WindowPostMessagePayloadType, } from "../lib/message-bridge/types";
+import { EthereumRequest } from "../lib/providers/types";
 
 function injectScript() {
   try {
@@ -41,12 +42,12 @@ const onWindowMessage = async (...args: any[]) => {
   }
 
   // console.log('CS msg handle: ', msg);
-  const resp = await sendRuntimeMessageToBackground(payload.msg);
+  const resp = await sendRuntimeMessageToBackground(JSON.parse(payload.msg) as EthereumRequest);
 
   console.log('WindowToCS send response', resp);
 
   window.postMessage(new WindowPostMessagePayload({
-    msg: resp,
+    msg: JSON.stringify(resp),
     type: WindowPostMessagePayloadType.RESPONSE,
     reqUid: payload.reqUid
   }).toJson());

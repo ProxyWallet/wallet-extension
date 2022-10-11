@@ -15,11 +15,11 @@ export const sendMessageToNewPopupWindow = async <TMsg = any, TReturn = any>(tab
 }
 
 const sendRuntimeMessage = async <TMsg = any, TReturn = any>(destination: PostMessageDestination, msg: TMsg) => {
-    return new Promise<TReturn>((resolve, _) => {
+    return new Promise<RuntimeOnMessageResponse<TReturn>>((resolve, _) => {
         chrome.runtime.sendMessage(new RuntimePostMessagePayload<TMsg>({
             msg: msg,
             destination: destination
-        }), (response) => {
+        }), (response: RuntimeOnMessageResponse) => {
             console.log(`${destination} response`, response)
             resolve(response);
         })
@@ -47,7 +47,7 @@ const runtimeOnMessage = (
     destination: PostMessageDestination,
     callback: BackgroundOnMessageCallback
 ) => {
-    chrome.runtime.onMessage.addListener(async function (
+    chrome.runtime.onMessage.addListener(function (
         request: RuntimePostMessagePayload,
         sender,
         sendResponse
@@ -56,17 +56,22 @@ const runtimeOnMessage = (
 
         console.log(`${destination} runtimeOnMessage`, request)
 
-        try {
-            const res = await callback(request, sender.origin ?? 'unknown');
-            console.log(`${destination} RUNTIME RESPONSE`, res);
-            sendResponse({
-                result: res
-            } as RuntimeOnMessageResponse);
-        } catch (err) {
-            sendResponse({
-                error: getCustomError(err + '')
-            } as RuntimeOnMessageResponse)
+        const promise = async () => {
+            try {
+                const res = await callback(request, sender.origin ?? 'unknown');
+                console.log(`${destination} RUNTIME RESPONSE`, res);
+                sendResponse({
+                    result: res
+                } as RuntimeOnMessageResponse);
+            } catch (err) {
+                console.log(`${destination} RUNTIME ON MESSAGE ERROR`, err);
+                sendResponse({
+                    error: err
+                } as RuntimeOnMessageResponse)
+            }
         }
+
+        promise().then(sendResponse);
 
         return true;
     });
