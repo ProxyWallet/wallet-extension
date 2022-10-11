@@ -4,6 +4,7 @@ import LocalForage from "./local-forage";
 export enum StorageNamespaces {
   CONNECTED_DOMAINS = 'connected-domains',
   USER_ADDRESSES = 'user-addresses',
+  USER_WALLETS = 'user-wallets'
 }
 
 export interface StorageOptions {

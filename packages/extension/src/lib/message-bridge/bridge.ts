@@ -109,11 +109,11 @@ export const newPopupOnMessage = async <TResult = any, TRequest = any>(
 }
 
 
-export const sendMessageFromBackgroundToBackground = async <TResp, TReq>(
-    req: TReq,
+export const sendMessageFromBackgroundToBackground = async <TResponse = unknown, TRequest = any>(
+    req: TRequest,
     type: RuntimePostMessagePayloadType,
     domain: string) => {
-    return <TResp>handleBackgroundMessage(new RuntimePostMessagePayload({
+    return <TResponse>handleBackgroundMessage(new RuntimePostMessagePayload({
         destination: PostMessageDestination.BACKGROUND,
         msg: req,
         type,
@@ -217,11 +217,10 @@ class WindowPromise {
         };
 
         const executePromise = async (): Promise<RuntimeOnMessageResponse> => {
-            const isKeyRingLocked = await sendMessageFromBackgroundToBackground(
-                JSON.stringify({
-                    method: InternalBgMethods.IS_LOCKED,
-                    params: [],
-                } as EthereumRequest),
+            const isKeyRingLocked = await sendMessageFromBackgroundToBackground<boolean, EthereumRequest>({
+                method: InternalBgMethods.IS_LOCKED,
+                params: []
+            },
                 RuntimePostMessagePayloadType.INTERNAL,
                 currentTabUrl.url ?? 'unknown'
             );

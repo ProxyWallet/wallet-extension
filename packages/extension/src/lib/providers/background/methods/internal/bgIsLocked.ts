@@ -5,5 +5,5 @@ import { EthereumRequest } from "../../../types";
 export const bgIsLocked: BackgroundOnMessageCallback<boolean> = async (request: RuntimePostMessagePayload, domain: string) => {
     console.log('bgIsLocked')
     // TODO: implement
-    return true;
+    return false;
 }
