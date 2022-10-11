@@ -6,12 +6,12 @@ import { getPopupPath, UIRoutes } from "../lib/popup-routes";
 backgroundOnMessage(handleBackgroundMessage)
 
 chrome.runtime.onInstalled.addListener(function () {
-    alert('Extension installed');
+    setTimeout(() => {
+        Browser.tabs.create({
+            active: true,
+            url: getPopupPath(UIRoutes.initializeWallet.path)
+        })
+    }, 1000)
 
-    Browser.tabs.create({
-        active: true,
-        url: getPopupPath(UIRoutes.initializeWallet.path)
-    })
-
-    return false;
+    return true;
 });
