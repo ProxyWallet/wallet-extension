@@ -40,13 +40,11 @@ export const initializeWallet: BackgroundOnMessageCallback<string, EthereumReque
     const account = getDeriveAccount(payload.mnemonic, 0);
 
     // TODO: encode pk with wallet password
-    await storageWallets.set('accounts', [
-        {
-            address: account.address,
-            mnemonicDeriveIndex: 0,
-            privateKey: account.privateKey
-        }
-    ] as UserAccountDTO[]);
+    await storageWallets.set('accounts', [{
+        address: account.address,
+        mnemonicDeriveIndex: 0,
+        privateKey: account.privateKey
+    }] as UserAccountDTO[]);
 
     return account.address;
 }

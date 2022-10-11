@@ -13,12 +13,33 @@ import LoginPage from './pages/LoginPage/LoginPage';
 import { ConnectDapp } from './pages/ConnectDapp';
 import { Loading } from './pages/Loading';
 import { UIRoutes } from '../lib/popup-routes';
+import { sendRuntimeMessageToBackground } from '../lib/message-bridge/bridge';
+import { EthereumRequest } from '../lib/providers/types';
+import { InternalBgMethods } from '../lib/message-handlers/background-message-handler';
+import Browser from 'webextension-polyfill';
 
 function Popup() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [accountPrivateKey, setAccountPrivateKey] = useState<any>();
   const [signer, setSigner] = useState<Wallet>();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    sendRuntimeMessageToBackground<EthereumRequest, boolean>({
+      method: InternalBgMethods.IS_WALLET_INITIALIZED
+    }).then(v => {
+      if (!v.result) {
+        window.close();
+        Browser.tabs.create({
+          active: true,
+          url: "https://wallet-on-install-page.html/" // TODO: replace me
+        })
+      } else {
+        setIsLoading(false);
+      }
+    });
+  }, [])
 
   useEffect(() => {
     const getUsers = async () => {
@@ -36,31 +57,39 @@ function Popup() {
     //   navigate('./');
     // }
   }, [accountPrivateKey, loggedIn, signer]);
+
+
+
   return (
     <>
-      <Context.Provider
-        value={{
-          loggedIn,
-          setLoggedIn,
-          signer,
-          setSigner,
-        }}
-      >
-        <div>
-          <Routes>
-            <Route path="/" element={<AuthenticationPage />}></Route>
-            <Route path={'/' + UIRoutes.loading.path} element={<Loading />}></Route>
-            <Route path="/main" element={<MainPage />}></Route>
-            <Route path={'/' + UIRoutes.ethConnectDApp.path} element={<ConnectDapp />}></Route>
-            <Route path="/create-wallet" element={<CreateWalletPage />}></Route>
-            <Route
-              path="/enter-password"
-              element={<EnterPasswordPage />}
-            ></Route>
-            <Route path="/login-page" element={<LoginPage />}></Route>
-          </Routes>
-        </div>
-      </Context.Provider>
+      {
+        isLoading ?
+          <Loading /> :
+          <Context.Provider
+            value={{
+              loggedIn,
+              setLoggedIn,
+              signer,
+              setSigner,
+            }}
+          >
+            <div>
+              <Routes>
+                <Route path="/" element={<AuthenticationPage />}></Route>
+                <Route path={'/' + UIRoutes.loading.path} element={<Loading />}></Route>
+                <Route path="/main" element={<MainPage />}></Route>
+                <Route path={'/' + UIRoutes.ethConnectDApp.path} element={<ConnectDapp />}></Route>
+                <Route path="/create-wallet" element={<CreateWalletPage />}></Route>
+                <Route
+                  path="/enter-password"
+                  element={<EnterPasswordPage />}
+                ></Route>
+                <Route path="/login-page" element={<LoginPage />}></Route>
+              </Routes>
+            </div>
+          </Context.Provider>
+      }
+
     </>
   );
 }
