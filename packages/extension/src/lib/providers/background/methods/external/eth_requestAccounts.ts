@@ -3,15 +3,17 @@ import WindowPromise, { BackgroundOnMessageCallback, sendRuntimeMessageToPopup }
 import { RuntimeOnMessageResponse, RuntimePostMessagePayload, RuntimePostMessagePayloadType } from "../../../../message-bridge/types";
 import { getPopupPath, UIRoutes } from "../../../../popup-routes";
 import Storage, { StorageNamespaces } from "../../../../storage";
+import { getBaseUrl } from "../../../../utils/url";
 import { EthereumRequest } from "../../../types";
 import { UserAccountDTO } from "../internal/initializeWallet";
 
 export const ethRequestAccounts: BackgroundOnMessageCallback<string[], EthereumRequest> = async (
     request,
-    domain
+    origin
 ) => {
     console.log('ethRequestAccounts');
     const payload = request.msg;
+    const domain = getBaseUrl(origin);
 
     if (!payload) {
         throw getCustomError('ethRequestAccounts: invalid data');

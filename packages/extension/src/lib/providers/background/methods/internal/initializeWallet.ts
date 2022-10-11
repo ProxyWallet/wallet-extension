@@ -13,7 +13,8 @@ export type InitializeWalletPayload = {
 export type UserAccountDTO = {
     address: string,
     mnemonicDeriveIndex: number,
-    privateKey?: string
+    isImported: boolean
+    privateKey?: string,
 }
 
 export const initializeWallet: BackgroundOnMessageCallback<string, EthereumRequest> = async (
@@ -43,7 +44,8 @@ export const initializeWallet: BackgroundOnMessageCallback<string, EthereumReque
     const accountDto = {
         address: account.address,
         mnemonicDeriveIndex: 0,
-        privateKey: account.privateKey
+        privateKey: account.privateKey,
+        isImported: false // TODO: revise
     } as UserAccountDTO
 
     // TODO: encode pk with wallet password
