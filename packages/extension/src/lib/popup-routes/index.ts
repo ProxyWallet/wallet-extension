@@ -13,6 +13,11 @@ export const UIRoutes = {
         component: {},
         name: "unlock",
     },
+    initializeWallet: {
+        path: "initialize-wallet",
+        component: {},
+        name: "initializeWallet",
+    },
     ethSign: {
         path: "eth-sign",
         name: "ethSign",
@@ -43,6 +48,7 @@ export const UIRoutes = {
         name: "ethConnectDApp",
         component: {},
     },
+
     ethHWVerify: {
         path: "eth-hw-verify",
         name: "ethHWVerify",

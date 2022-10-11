@@ -1,7 +1,7 @@
 import './Popup.css';
 
 import React, { useEffect, useState } from 'react';
-import { Route, Routes, useNavigate } from 'react-router-dom';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Context } from './Context';
 import AuthenticationPage from './pages/AuthenticationPage/AuthenticationPage';
 import MainPage from './pages/MainPage/MainPage';
@@ -12,7 +12,7 @@ import { isPresentCryptedPrivateKeyAtStorage } from './storageUtils/utils';
 import LoginPage from './pages/LoginPage/LoginPage';
 import { ConnectDapp } from './pages/ConnectDapp';
 import { Loading } from './pages/Loading';
-import { UIRoutes } from '../lib/popup-routes';
+import { getPopupPath, UIRoutes } from '../lib/popup-routes';
 import { sendRuntimeMessageToBackground } from '../lib/message-bridge/bridge';
 import { EthereumRequest } from '../lib/providers/types';
 import { InternalBgMethods } from '../lib/message-handlers/background-message-handler';
@@ -24,16 +24,17 @@ function Popup() {
   const [signer, setSigner] = useState<Wallet>();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const location = useLocation()
 
   useEffect(() => {
     sendRuntimeMessageToBackground<EthereumRequest, boolean>({
       method: InternalBgMethods.IS_WALLET_INITIALIZED
     }).then(v => {
-      if (!v.result) {
+      if (!v.result && location.pathname !== ('/' + UIRoutes.initializeWallet.path)) {
         window.close();
         Browser.tabs.create({
           active: true,
-          url: "https://wallet-on-install-page.html/" // TODO: replace me
+          url: getPopupPath(UIRoutes.initializeWallet.path) 
         })
       } else {
         setIsLoading(false);
@@ -77,6 +78,7 @@ function Popup() {
               <Routes>
                 <Route path="/" element={<AuthenticationPage />}></Route>
                 <Route path={'/' + UIRoutes.loading.path} element={<Loading />}></Route>
+                <Route path={'/' + UIRoutes.initializeWallet.path} element={<div>INIT</div>}></Route>
                 <Route path="/main" element={<MainPage />}></Route>
                 <Route path={'/' + UIRoutes.ethConnectDApp.path} element={<ConnectDapp />}></Route>
                 <Route path="/create-wallet" element={<CreateWalletPage />}></Route>
