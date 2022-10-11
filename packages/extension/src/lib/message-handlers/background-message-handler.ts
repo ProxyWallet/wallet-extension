@@ -4,6 +4,7 @@ import { BackgroundOnMessageCallback } from "../message-bridge/bridge";
 import { RuntimeOnMessageResponse, RuntimePostMessagePayloadType } from "../message-bridge/types";
 import { ethRequestAccounts } from "../providers/background/methods/external/eth_requestAccounts";
 import { bgIsLocked } from "../providers/background/methods/internal/bgIsLocked";
+import { getUserAddresses } from "../providers/background/methods/internal/getUserAddresses";
 import { initializeWallet } from "../providers/background/methods/internal/initializeWallet";
 import { isWalletInitialized } from "../providers/background/methods/internal/isWalletInitialized";
 import { EthereumRequest } from "../providers/types";
@@ -12,7 +13,8 @@ import { makeRpcRequest } from "../requests/toRpcNode";
 export enum InternalBgMethods {
     IS_LOCKED = 'bgIsLocked',
     IS_WALLET_INITIALIZED = 'isWalletInitialized',
-    INITIALIZE_WALLET = 'initializeWallet'
+    INITIALIZE_WALLET = 'initializeWallet',
+    GET_USER_ADDRESSES = 'getUserAddresses',
 }
 
 export const handleBackgroundMessage: BackgroundOnMessageCallback = async (request, domain) => {
@@ -57,6 +59,8 @@ const handleInternal: BackgroundOnMessageCallback<any, EthereumRequest> = async 
         return initializeWallet(request, domain);
     } else if (request.msg.method === InternalBgMethods.IS_WALLET_INITIALIZED) {
         return isWalletInitialized(request, domain)
+    } else if (request.msg.method === InternalBgMethods.GET_USER_ADDRESSES) {
+        return getUserAddresses(request, domain)
     }
     else {
         console.log('bg: internal unknown method')

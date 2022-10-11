@@ -149,9 +149,9 @@ export interface ProviderError {
   data?: unknown;
 }
 
-export interface EthereumRequest {
+export interface EthereumRequest<TParam = any> {
   method: string;
-  params?: Array<any>;
+  params?: Array<TParam>;
 }
 
 export interface EthereumResponse {

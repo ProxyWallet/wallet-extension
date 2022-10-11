@@ -1,20 +1,42 @@
 import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { sendRuntimeMessageToBackground } from '../../../lib/message-bridge/bridge';
+import { RuntimePostMessagePayloadType } from '../../../lib/message-bridge/types';
+import { InternalBgMethods } from '../../../lib/message-handlers/background-message-handler';
+import { InitializeWalletPayload } from '../../../lib/providers/background/methods/internal/initializeWallet';
+import { EthereumRequest } from '../../../lib/providers/types';
 
 import { Context } from '../../Context';
-import { createPasswordForMnemonic } from '../../storageUtils/utils';
+// import { createPasswordForMnemonic } from '../../storageUtils/utils';
 
 const LoginPage = (props: any) => {
   const [mnemonicPhrase, setMnemonicPhrase] = useState<any>();
   const [password, setPassword] = useState<any>();
   const navigate = useNavigate();
-
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { loggedIn, setLoggedIn } = useContext<any>(Context);
 
-  async function createPasswordAndLogin() {
+  const initializeWallet = async () => {
     if (!mnemonicPhrase || !password) alert('missing argument');
-    await createPasswordForMnemonic(mnemonicPhrase, password);
+    if (!validatePassword(password)) alert('bad password');
+    setIsLoading(true);
+    const result =
+      await sendRuntimeMessageToBackground<EthereumRequest<InitializeWalletPayload>, string>({
+        method: InternalBgMethods.INITIALIZE_WALLET,
+        params: [{
+          mnemonic: mnemonicPhrase,
+          walletPassword: password
+        }]
+      }, RuntimePostMessagePayloadType.INTERNAL)
+    setIsLoading(false);
+    alert(`Current active address: ${result.result}`)
     setLoggedIn(!loggedIn);
+    navigate('/')
+  }
+
+  const validatePassword = async (password: string) => {
+    // todo 
+    return true;
   }
 
   return (
@@ -35,7 +57,7 @@ const LoginPage = (props: any) => {
         />
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => createPasswordAndLogin()}
+          onClick={() => initializeWallet()}
         >
           Login
         </button>
@@ -47,6 +69,9 @@ const LoginPage = (props: any) => {
           Create new
         </button>
       </div>
+      {isLoading && <div>
+        Loading
+      </div>}
     </div>
   );
 };

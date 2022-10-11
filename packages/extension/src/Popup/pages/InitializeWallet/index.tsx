@@ -1,5 +1,12 @@
-import React from "react"
+import React, { useContext, useState } from "react"
+import { Route, Routes, useNavigate } from "react-router-dom";
+import { Mnemonics } from "./Mnemonics";
 
 export const InitializeWallet: React.FC = () => {
-    return <><span>__LOADING__</span></>
+    const navigate = useNavigate();
+
+    return (
+        // TODO: create subroutes here
+        <Mnemonics />
+    );
 }

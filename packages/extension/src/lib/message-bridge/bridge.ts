@@ -14,11 +14,16 @@ export const sendMessageToNewPopupWindow = async <TMsg = any, TReturn = any>(tab
     return res as RuntimeOnMessageResponse<TReturn>;
 }
 
-const sendRuntimeMessage = async <TMsg = any, TReturn = any>(destination: PostMessageDestination, msg: TMsg) => {
+const sendRuntimeMessage = async <TMsg = any, TReturn = any>(
+    destination: PostMessageDestination,
+    msg: TMsg,
+    type: RuntimePostMessagePayloadType = RuntimePostMessagePayloadType.EXTERNAL
+) => {
     return new Promise<RuntimeOnMessageResponse<TReturn>>((resolve, _) => {
         chrome.runtime.sendMessage(new RuntimePostMessagePayload<TMsg>({
             msg: msg,
-            destination: destination
+            destination: destination,
+            type
         }), (response: RuntimeOnMessageResponse) => {
             console.log(`${destination} response`, response)
             resolve(response);
@@ -26,8 +31,11 @@ const sendRuntimeMessage = async <TMsg = any, TReturn = any>(destination: PostMe
     })
 }
 
-export const sendRuntimeMessageToBackground = <TMsg = any, TReturn = any>(msg: TMsg) => {
-    return sendRuntimeMessage<TMsg, TReturn>(PostMessageDestination.BACKGROUND, msg);
+export const sendRuntimeMessageToBackground = <TMsg = any, TReturn = any>(
+    msg: TMsg,
+    type: RuntimePostMessagePayloadType = RuntimePostMessagePayloadType.EXTERNAL
+) => {
+    return sendRuntimeMessage<TMsg, TReturn>(PostMessageDestination.BACKGROUND, msg, type);
 }
 
 export const sendRuntimeMessageToPopup = <TMsg = any, TReturn = any>(msg: TMsg) => {

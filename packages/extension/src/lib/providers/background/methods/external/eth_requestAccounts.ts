@@ -4,6 +4,7 @@ import { RuntimeOnMessageResponse, RuntimePostMessagePayload, RuntimePostMessage
 import { getPopupPath, UIRoutes } from "../../../../popup-routes";
 import Storage, { StorageNamespaces } from "../../../../storage";
 import { EthereumRequest } from "../../../types";
+import { UserAccountDTO } from "../internal/initializeWallet";
 
 export const ethRequestAccounts: BackgroundOnMessageCallback<string[], EthereumRequest> = async (
     request,
@@ -19,7 +20,7 @@ export const ethRequestAccounts: BackgroundOnMessageCallback<string[], EthereumR
     const window = new WindowPromise();
 
     const storageDomains = new Storage(StorageNamespaces.CONNECTED_DOMAINS)
-    const storageAddresses = new Storage(StorageNamespaces.USER_ADDRESSES);
+    const storageAddresses = new Storage(StorageNamespaces.USER_WALLETS);
 
     if (!domain) {
         throw getCustomError('ethRequestAccounts: invalid sender origin')
@@ -27,9 +28,9 @@ export const ethRequestAccounts: BackgroundOnMessageCallback<string[], EthereumR
 
     let connectedAddresses = await storageDomains.get<string[]>(domain)
 
-    const userSelectedAddress = '0xEC227cFE7485b9423B7e2eb30b813c7b5413a0f2';  // await storageAddresses.get<string>('selectedAddress');
+    const userSelectedAccount = await storageAddresses.get<UserAccountDTO>('selectedAccount');
 
-    if (!userSelectedAddress) {
+    if (!userSelectedAccount) {
         throw getCustomError('ethRequestAccounts: user selected address is null')
     }
 
@@ -49,7 +50,7 @@ export const ethRequestAccounts: BackgroundOnMessageCallback<string[], EthereumR
 
         if (response.error) throw response.error;
 
-        connectedAddresses = [userSelectedAddress];
+        connectedAddresses = [userSelectedAccount.address];
     }
 
     await storageDomains.set(domain, connectedAddresses);

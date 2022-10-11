@@ -6,7 +6,8 @@ import { getDeriveAccount } from "../../../../utils/accounts";
 import { EthereumRequest } from "../../../types";
 
 export type InitializeWalletPayload = {
-    mnemonic: string
+    mnemonic: string;
+    walletPassword: string
 }
 
 export type UserAccountDTO = {
@@ -39,12 +40,16 @@ export const initializeWallet: BackgroundOnMessageCallback<string, EthereumReque
 
     const account = getDeriveAccount(payload.mnemonic, 0);
 
-    // TODO: encode pk with wallet password
-    await storageWallets.set('accounts', [{
+    const accountDto = {
         address: account.address,
         mnemonicDeriveIndex: 0,
         privateKey: account.privateKey
-    }] as UserAccountDTO[]);
+    } as UserAccountDTO
+
+    // TODO: encode pk with wallet password
+    await storageWallets.set('accounts', [accountDto]);
+
+    await storageWallets.set('selectedAccount', accountDto);
 
     return account.address;
 }

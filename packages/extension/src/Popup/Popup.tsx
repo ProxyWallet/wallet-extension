@@ -17,6 +17,8 @@ import { sendRuntimeMessageToBackground } from '../lib/message-bridge/bridge';
 import { EthereumRequest } from '../lib/providers/types';
 import { InternalBgMethods } from '../lib/message-handlers/background-message-handler';
 import Browser from 'webextension-polyfill';
+import { InitializeWallet } from './pages/InitializeWallet';
+import { RuntimePostMessagePayloadType } from '../lib/message-bridge/types';
 
 function Popup() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -29,12 +31,12 @@ function Popup() {
   useEffect(() => {
     sendRuntimeMessageToBackground<EthereumRequest, boolean>({
       method: InternalBgMethods.IS_WALLET_INITIALIZED
-    }).then(v => {
+    }, RuntimePostMessagePayloadType.INTERNAL).then(v => {
       if (!v.result && location.pathname !== ('/' + UIRoutes.initializeWallet.path)) {
         window.close();
         Browser.tabs.create({
           active: true,
-          url: getPopupPath(UIRoutes.initializeWallet.path) 
+          url: getPopupPath(UIRoutes.initializeWallet.path)
         })
       } else {
         setIsLoading(false);
@@ -76,10 +78,9 @@ function Popup() {
           >
             <div>
               <Routes>
-                <Route path="/" element={<AuthenticationPage />}></Route>
+                <Route path="/" element={<MainPage />}></Route>
                 <Route path={'/' + UIRoutes.loading.path} element={<Loading />}></Route>
-                <Route path={'/' + UIRoutes.initializeWallet.path} element={<div>INIT</div>}></Route>
-                <Route path="/main" element={<MainPage />}></Route>
+                <Route path={'/' + UIRoutes.initializeWallet.path} element={<InitializeWallet />}></Route>
                 <Route path={'/' + UIRoutes.ethConnectDApp.path} element={<ConnectDapp />}></Route>
                 <Route path="/create-wallet" element={<CreateWalletPage />}></Route>
                 <Route
