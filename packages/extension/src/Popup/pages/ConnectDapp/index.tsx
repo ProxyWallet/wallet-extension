@@ -52,9 +52,9 @@ export const ConnectDapp: React.FC = () => {
         reqPromise.funcs.resolve?.(true);
     }
 
-    const onTabMessage = async (_: RuntimePostMessagePayload<EthereumRequest>) => {
+    const onTabMessage = async (req: RuntimePostMessagePayload<EthereumRequest>) => {
         setIsLoaded(true);
-        return reqPromise.promise;
+        return await reqPromise.promise;
     }
 
     useEffect(() => {

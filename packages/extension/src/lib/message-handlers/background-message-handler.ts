@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import { getCustomError } from "../errors";
 import { BackgroundOnMessageCallback } from "../message-bridge/bridge";
-import { RuntimePostMessagePayloadType } from "../message-bridge/types";
+import { RuntimeOnMessageResponse, RuntimePostMessagePayloadType } from "../message-bridge/types";
 import { ethRequestAccounts } from "../providers/background/methods/external/eth_requestAccounts";
 import { bgIsLocked } from "../providers/background/methods/internal/bgIsLocked";
 import { EthereumRequest } from "../providers/types";
@@ -11,55 +11,47 @@ export enum InternalBgMethods {
     IS_LOCKED = 'bgIsLocked'
 }
 
-export const handleBackgroundMessage: BackgroundOnMessageCallback = async (request, sender) => {
-    console.log('BG sender', sender);
+export const handleBackgroundMessage: BackgroundOnMessageCallback = async (request, domain) => {
+    console.log('BG sender', domain);
 
     if (request.type === RuntimePostMessagePayloadType.EXTERNAL) {
-        console.log('external', sender);
+        console.log('external', domain);
 
-        return await handleExternal(request, sender);
+        return await handleExternal(request, domain);
     } else {
-        console.log('internal', sender);
+        console.log('internal', domain);
 
-        return await handleInternal(request, sender);
+        return await handleInternal(request, domain);
     }
 }
 
-const handleExternal: BackgroundOnMessageCallback = async (request, sender) => {
-    // assert(request.type === RuntimePostMessagePayloadType.EXTERNAL, 'invalid payload type');
+const handleExternal: BackgroundOnMessageCallback<any, EthereumRequest> = async (request, domain) => {
+    if (!request.msg) throw getCustomError('Invalid payload')
 
     console.log('bg: handleExternal');
 
-    const payload = JSON.parse(request.msg ?? '{}') as EthereumRequest;
-
-    console.log('ethereum request', payload);
-
     if (
-        payload.method == "eth_accounts" ||
-        payload.method == "eth_requestAccounts" ||
-        payload.method == "eth_coinbase"
+        request.msg.method == "eth_accounts" ||
+        request.msg.method == "eth_requestAccounts" ||
+        request.msg.method == "eth_coinbase"
     ) {
-        return ethRequestAccounts(payload, sender, request.type );
+        return ethRequestAccounts(request, domain);
     } else {
-        return makeRpcRequest(payload, request.type)
+        return makeRpcRequest(request, request.type)
     }
 
 }
 
-const handleInternal: BackgroundOnMessageCallback = async (request, sender) => {
-    // assert(request.type === RuntimePostMessagePayloadType.INTERNAL, 'invalid payload type');
+const handleInternal: BackgroundOnMessageCallback<any, EthereumRequest> = async (request, domain) => {
+    if (!request.msg) throw getCustomError('Invalid payload')
 
     console.log('bg: handleInternal req', request);
 
-    const payload = JSON.parse(request.msg ?? '{}') as EthereumRequest;
-
-    console.log('bg: handleInternal', payload);
-
-    if (payload.method === InternalBgMethods.IS_LOCKED) {
-        return bgIsLocked(payload);
+    if (request.msg.method === InternalBgMethods.IS_LOCKED) {
+        return bgIsLocked(request, domain);
     }
     else {
         console.log('bg: internal unknown method')
-        return getCustomError('Invalid background method');
+        throw getCustomError('Invalid background method');
     }
 }

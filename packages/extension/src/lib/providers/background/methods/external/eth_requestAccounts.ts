@@ -1,27 +1,28 @@
 import { getCustomError } from "../../../../errors";
-import WindowPromise, { sendRuntimeMessageToPopup } from "../../../../message-bridge/bridge";
+import WindowPromise, { BackgroundOnMessageCallback, sendRuntimeMessageToPopup } from "../../../../message-bridge/bridge";
 import { RuntimeOnMessageResponse, RuntimePostMessagePayload, RuntimePostMessagePayloadType } from "../../../../message-bridge/types";
 import { getPopupPath, UIRoutes } from "../../../../popup-routes";
 import Storage, { StorageNamespaces } from "../../../../storage";
 import { EthereumRequest } from "../../../types";
 
-export const ethRequestAccounts = async (
-    payload: EthereumRequest,
-    sender: chrome.runtime.MessageSender,
-    type: RuntimePostMessagePayloadType
-): Promise<RuntimeOnMessageResponse<string[]>> => {
+export const ethRequestAccounts: BackgroundOnMessageCallback<string[], EthereumRequest> = async (
+    request,
+    domain
+) => {
     console.log('ethRequestAccounts');
+    const payload = request.msg;
+
+    if (!payload) {
+        throw getCustomError('ethRequestAccounts: invalid data');
+    }
+
     const window = new WindowPromise();
 
     const storageDomains = new Storage(StorageNamespaces.CONNECTED_DOMAINS)
     const storageAddresses = new Storage(StorageNamespaces.USER_ADDRESSES);
 
-    const domain = sender.origin;
-
     if (!domain) {
-        return {
-            error: getCustomError('ethRequestAccounts: invalid sender origin')
-        }
+        throw getCustomError('ethRequestAccounts: invalid sender origin')
     }
 
     let connectedAddresses = await storageDomains.get<string[]>(domain)
@@ -29,9 +30,7 @@ export const ethRequestAccounts = async (
     const userSelectedAddress = await storageAddresses.get<string>('selectedAddress');
 
     if (!userSelectedAddress) {
-        return {
-            error: getCustomError('ethRequestAccounts: user selected address is null')
-        }
+        throw getCustomError('ethRequestAccounts: user selected address is null')
     }
 
     if (connectedAddresses &&
@@ -40,7 +39,7 @@ export const ethRequestAccounts = async (
     }
 
     if (!connectedAddresses || !connectedAddresses.length) {
-        
+
         // TODO: pass flag to trigger/not-trigger popup menu
         // to be able to use this bg handler for internal purposes 
         const response =
@@ -48,14 +47,12 @@ export const ethRequestAccounts = async (
                 getPopupPath(UIRoutes.ethConnectDApp.path),
                 { method: payload.method }, true);
 
-        if (response.error) return response;
+        if (response.error) throw response.error;
 
         connectedAddresses = [userSelectedAddress];
     }
 
     await storageDomains.set(domain, connectedAddresses);
 
-    return {
-        result: [connectedAddresses[0]]
-    }
+    return [connectedAddresses[0]];
 }

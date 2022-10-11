@@ -34,20 +34,20 @@ export const sendRuntimeMessageToPopup = <TMsg = any, TReturn = any>(msg: TMsg) 
     return sendRuntimeMessage<TMsg, TReturn>(PostMessageDestination.POPUP, msg);
 }
 
-export type BackgroundOnMessageCallback =
-    (request: RuntimePostMessagePayload, sender: chrome.runtime.MessageSender) => Promise<any>
+export type BackgroundOnMessageCallback<TResult = any, TRequest = any> =
+    (request: RuntimePostMessagePayload<TRequest>, domain: string) => Promise<TResult>
 
-export type PopupOnMessageCallback =
-    BackgroundOnMessageCallback
+export type PopupOnMessageCallback<TResult = any, TRequest = any> =
+    BackgroundOnMessageCallback<TResult, TRequest>
 
-export type NewPopupWindowOnMessageCallback<TResult = any> =
-    (request: RuntimePostMessagePayload) => Promise<TResult>
+export type NewPopupWindowOnMessageCallback<TResult = any, TRequest = any> =
+    (request: RuntimePostMessagePayload<TRequest>) => Promise<TResult>
 
 const runtimeOnMessage = (
     destination: PostMessageDestination,
     callback: BackgroundOnMessageCallback
 ) => {
-    chrome.runtime.onMessage.addListener(function (
+    chrome.runtime.onMessage.addListener(async function (
         request: RuntimePostMessagePayload,
         sender,
         sendResponse
@@ -56,9 +56,17 @@ const runtimeOnMessage = (
 
         console.log(`${destination} runtimeOnMessage`, request)
 
-        callback(request, sender)
-            .then((r) => { console.log(`${destination} RUNTIME RESPONSE`, r); sendResponse(r) })
-            .catch(sendResponse);
+        try {
+            const res = await callback(request, sender.origin ?? 'unknown');
+            console.log(`${destination} RUNTIME RESPONSE`, res);
+            sendResponse({
+                result: res
+            } as RuntimeOnMessageResponse);
+        } catch (err) {
+            sendResponse({
+                error: getCustomError(err + '')
+            } as RuntimeOnMessageResponse)
+        }
 
         return true;
     });
@@ -76,19 +84,17 @@ export const popupOnMessage = async (
     runtimeOnMessage(PostMessageDestination.POPUP, callback)
 }
 
-export const newPopupOnMessage = async <TResult = any>(
-    callback: NewPopupWindowOnMessageCallback<TResult>
+export const newPopupOnMessage = async <TResult = any, TRequest = any>(
+    callback: NewPopupWindowOnMessageCallback<TResult, TRequest>
 ) => {
     Browser.runtime.onMessage.addListener(async (
         message: RuntimePostMessagePayload,
     ) => {
         if (message.destination !== PostMessageDestination.NEW_POPUP) return;
 
-        // return callback(message);
         try {
             const result = await callback(message);
-            alert(result);
-            return { result } as RuntimeOnMessageResponse
+            return result;
         } catch (error) {
             alert(error);
 
@@ -98,12 +104,15 @@ export const newPopupOnMessage = async <TResult = any>(
 }
 
 
-export const sendMessageFromBackgroundToBackground = async <TResp, TReq>(req: TReq, type: RuntimePostMessagePayloadType) => {
+export const sendMessageFromBackgroundToBackground = async <TResp, TReq>(
+    req: TReq,
+    type: RuntimePostMessagePayloadType,
+    domain: string) => {
     return <TResp>handleBackgroundMessage(new RuntimePostMessagePayload({
         destination: PostMessageDestination.BACKGROUND,
         msg: req,
-        type
-    }))
+        type,
+    }), domain)
 }
 
 const UNLOCK_PATH = getPopupPath(UIRoutes.unlock.path);
@@ -168,6 +177,13 @@ class WindowPromise {
             : 0;
         console.log('tabId', tabId)
 
+        const [currentTabUrl] = await Browser.tabs.query({
+            active: true,
+            currentWindow: true,
+        })
+
+        console.log('currentTabUrl: ', currentTabUrl);
+
         if (typeof tabId === "undefined") {
             return Promise.resolve({
                 error: getCustomError("unknown error, no tabId"),
@@ -201,7 +217,8 @@ class WindowPromise {
                     method: InternalBgMethods.IS_LOCKED,
                     params: [],
                 } as EthereumRequest),
-                RuntimePostMessagePayloadType.INTERNAL
+                RuntimePostMessagePayloadType.INTERNAL,
+                currentTabUrl.url ?? 'unknown'
             );
 
             console.log('isKeyRingLockedd', isKeyRingLocked);

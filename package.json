@@ -13,11 +13,11 @@
   ],
   "scripts": {
     "add:extension": "yarn workspace @undas/extension add",
-
     "test": "yarn workspaces foreach -pv run test",
     "lint": "yarn workspaces foreach run lint",
     "build:all": "ultra -r build",
     "watch": "concurrently 'npm:watch-*'",
+    "build:extension": "cd packages/extension && npm run build",
     "start:extension": "cd packages/extension && npm run start"
   },
   "devDependencies": {
