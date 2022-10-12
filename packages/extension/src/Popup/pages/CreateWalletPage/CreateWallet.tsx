@@ -23,9 +23,7 @@ const CreateWalletPage = (props: any) => {
 
       {createdWallet ? (
         <div>
-          <h1>{createdWallet.address}</h1>
           <h1>{createdWallet.mnemonic.phrase}</h1>
-          <h1>{createdWallet.privateKey}</h1>
         </div>
       ) : (
         ''
