@@ -3,6 +3,7 @@ import { getCustomError } from "../errors";
 import { BackgroundOnMessageCallback } from "../message-bridge/bridge";
 import { RuntimeOnMessageResponse, RuntimePostMessagePayloadType } from "../message-bridge/types";
 import { ethRequestAccounts } from "../providers/background/methods/external/eth_requestAccounts";
+import { ethSendTransaction } from "../providers/background/methods/external/eth_sendTransaction";
 import { bgIsLocked } from "../providers/background/methods/internal/bgIsLocked";
 import { getUserAddresses } from "../providers/background/methods/internal/getUserAddresses";
 import { initializeWallet } from "../providers/background/methods/internal/initializeWallet";
@@ -42,6 +43,8 @@ const handleExternal: BackgroundOnMessageCallback<any, EthereumRequest> = async 
         request.msg.method == "eth_coinbase"
     ) {
         return ethRequestAccounts(request, domain);
+    } else if (request.msg.method === "eth_sendTransaction") {
+        return ethSendTransaction(request, domain)
     } else {
         return makeRpcRequest(request, request.type)
     }

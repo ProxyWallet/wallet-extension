@@ -121,6 +121,7 @@ export const sendMessageFromBackgroundToBackground = async <TResponse = unknown,
     req: TRequest,
     type: RuntimePostMessagePayloadType,
     domain: string) => {
+  
     return <TResponse>handleBackgroundMessage(new RuntimePostMessagePayload({
         destination: PostMessageDestination.BACKGROUND,
         msg: req,
@@ -176,13 +177,14 @@ class WindowPromise {
         const loadingPath = '/' + getPopupPath(UIRoutes.loading.path);
         console.log('loadingPath', loadingPath)
         const windowInfo = await Browser.windows.create({
-
             url: loadingPath,
             type: "popup",
             focused: true,
             height: 600,
             width: 460,
+            top: 0
         });
+
         console.log('window info', windowInfo)
 
         const tabId: number | undefined = windowInfo.tabs?.length

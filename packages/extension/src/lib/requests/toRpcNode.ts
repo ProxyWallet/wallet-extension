@@ -21,11 +21,11 @@ export const makeRpcRequest: BackgroundOnMessageCallback<unknown, EthereumReques
     return res;
 }
 
-const getCurrentNetwork = async () => {
+export const getCurrentNetwork = async () => {
     // todo: take this from local storage
     const networkConfig = {
-        jsonRpcUrl: 'https://mainnet.infura.io/v3/abe28880fd324397924cf12a753fcc87',
-        chainId: 1,
+        jsonRpcUrl: 'https://goerli.infura.io/v3/abe28880fd324397924cf12a753fcc87',
+        chainId: 5,
     }
     return {
         ...networkConfig,

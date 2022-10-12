@@ -19,6 +19,7 @@ import { InternalBgMethods } from '../lib/message-handlers/background-message-ha
 import Browser from 'webextension-polyfill';
 import { InitializeWallet } from './pages/InitializeWallet';
 import { RuntimePostMessagePayloadType } from '../lib/message-bridge/types';
+import SendTransactionPage from './pages/SendTransaction';
 
 function Popup() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -82,6 +83,7 @@ function Popup() {
                 <Route path={'/' + UIRoutes.loading.path} element={<Loading />}></Route>
                 <Route path={'/' + UIRoutes.initializeWallet.path} element={<InitializeWallet />}></Route>
                 <Route path={'/' + UIRoutes.ethConnectDApp.path} element={<ConnectDapp />}></Route>
+                <Route path={'/' + UIRoutes.ethSendTransaction.path} element={<SendTransactionPage />}></Route>
                 <Route path="/create-wallet" element={<CreateWalletPage />}></Route>
                 <Route
                   path="/enter-password"
