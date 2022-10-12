@@ -83,7 +83,7 @@ function Popup() {
                 <Route path={'/' + UIRoutes.loading.path} element={<Loading />}></Route>
                 <Route path={'/' + UIRoutes.initializeWallet.path} element={<InitializeWallet />}></Route>
                 <Route path={'/' + UIRoutes.ethConnectDApp.path} element={<ConnectDapp />}></Route>
-                <Route path={'/' + UIRoutes.ethSendTransaction.path} element={<SendTransactionPage />}></Route>
+                <Route path={'/' + UIRoutes.ethSendTransaction.path} element={<SendTransactionPage runtimeListen={true} />}></Route>
                 <Route path="/create-wallet" element={<CreateWalletPage />}></Route>
                 <Route
                   path="/enter-password"
