@@ -1,3 +1,4 @@
+import { ContractFactory, ethers } from 'ethers';
 import React, { useContext, useState, useEffect } from 'react';
 import Browser from 'webextension-polyfill';
 import { sendRuntimeMessageToBackground } from '../../../lib/message-bridge/bridge';
@@ -7,6 +8,8 @@ import { GetAccountsDTO } from '../../../lib/providers/background/methods/intern
 import { EthereumRequest } from '../../../lib/providers/types';
 import { Context } from '../../Context';
 import { Marketplace__factory } from '../../testContractFactory/Marketplace__factory';
+import { Wallet } from '../../testContractFactory/Wallet';
+import { Wallet__factory } from '../../testContractFactory/Wallet__factory';
 
 const MainPage = (props: any) => {
   const { loggedIn, setLoggedIn, signer, setSigner } = useContext<any>(Context);
@@ -24,12 +27,24 @@ const MainPage = (props: any) => {
     console.log('currentTab', currentTab);
 
     const res = await sendRuntimeMessageToBackground<EthereumRequest, GetAccountsDTO[]>({
-      method: InternalBgMethods.GET_USER_ADDRESSES,
+      method: InternalBgMethods.GET_USER_ADDRESSES,//eth_sendTx
       params: [currentTab.url]
     }, RuntimePostMessagePayloadType.INTERNAL)
     console.log('getUserAccounts:', res)
     if (res.error || !res.result) alert('get user error');
     setUserAccounts(res.result);
+  }
+
+  const deployContract = async () => {
+    // const WalletFactory = new ContractFactory(Wallet__factory.abi,Wallet__factory.bytecode)
+    // console.log('1')
+    // const contract = await WalletFactory.connect().deploy('1','1','1','1','1')
+    // console.log('2')
+    const res = await sendRuntimeMessageToBackground<EthereumRequest, string>({
+      method: InternalBgMethods.DEPLOY_UNDAS_CONTRACT,//eth_sendTx
+      params: []
+    }, RuntimePostMessagePayloadType.INTERNAL)
+
   }
 
   useEffect(() => {
@@ -97,6 +112,12 @@ const MainPage = (props: any) => {
           onClick={() => interactWithContract()}
         >
           Test contract interaction
+        </button>
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={() => deployContract()}
+        >
+          Deploy contract
         </button>
       </div>
     </div>

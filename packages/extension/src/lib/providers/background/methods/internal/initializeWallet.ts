@@ -15,6 +15,7 @@ export type UserAccountDTO = {
     mnemonicDeriveIndex: number,
     isImported: boolean
     privateKey?: string,
+    undasContract?:string
 }
 
 export const initializeWallet: BackgroundOnMessageCallback<string, EthereumRequest> = async (

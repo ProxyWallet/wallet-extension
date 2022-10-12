@@ -5,6 +5,7 @@ import { RuntimeOnMessageResponse, RuntimePostMessagePayloadType } from "../mess
 import { ethRequestAccounts } from "../providers/background/methods/external/eth_requestAccounts";
 import { ethSendTransaction } from "../providers/background/methods/external/eth_sendTransaction";
 import { bgIsLocked } from "../providers/background/methods/internal/bgIsLocked";
+import { deployUndasContract } from "../providers/background/methods/internal/deployUndasContract";
 import { getUserAddresses } from "../providers/background/methods/internal/getUserAddresses";
 import { initializeWallet } from "../providers/background/methods/internal/initializeWallet";
 import { isWalletInitialized } from "../providers/background/methods/internal/isWalletInitialized";
@@ -16,6 +17,7 @@ export enum InternalBgMethods {
     IS_WALLET_INITIALIZED = 'isWalletInitialized',
     INITIALIZE_WALLET = 'initializeWallet',
     GET_USER_ADDRESSES = 'getUserAddresses',
+    DEPLOY_UNDAS_CONTRACT = 'deployUndasContract'
 }
 
 export const handleBackgroundMessage: BackgroundOnMessageCallback = async (request, domain) => {
@@ -64,6 +66,9 @@ const handleInternal: BackgroundOnMessageCallback<any, EthereumRequest> = async 
         return isWalletInitialized(request, domain)
     } else if (request.msg.method === InternalBgMethods.GET_USER_ADDRESSES) {
         return getUserAddresses(request, domain)
+    } else if (request.msg.method === InternalBgMethods.DEPLOY_UNDAS_CONTRACT) {
+        return deployUndasContract()
+
     }
     else {
         console.log('bg: internal unknown method')
