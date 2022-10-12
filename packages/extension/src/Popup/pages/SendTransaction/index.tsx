@@ -10,44 +10,26 @@ import { Context } from '../../Context';
 import { Marketplace__factory } from '../../testContractFactory/Marketplace__factory';
 import { TransactionRequest } from '@ethersproject/abstract-provider'
 import { BigNumber, utils } from 'ethers';
-
-type PromiseResult = TransactionRequest;
-
-type PromiseResultResolve = (res: PromiseResult) => void;
-type PromiseResultReject = (reason?: any) => void;
+import { usePagePromise } from '../../hooks/usePagePromise';
 
 const SendTransactionPage = (props: any) => {
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
   const [txToSign, setTxToSign] = useState<TransactionRequest>();
 
-  const [reqPromise] = useState(
-    () => {
-      const funcs = {} as {
-        reject: PromiseResultReject | undefined;
-        resolve: PromiseResultResolve | undefined;
-      }
-
-      return {
-        funcs,
-        promise: new Promise<PromiseResult>((_resolve, _reject) => {
-          funcs.resolve = _resolve;
-          funcs.reject = _reject;
-        })
-      }
-    });
+  const [pagePromise, pagePromiseFunctions] = usePagePromise<TransactionRequest>()
 
   const discardTx = () => {
-    reqPromise.funcs?.reject?.(getError(ErrorCodes.userRejected));
+    pagePromiseFunctions?.reject?.(getError(ErrorCodes.userRejected));
   }
 
   const approveTx = () => {
-    if (txToSign) reqPromise.funcs.resolve?.(txToSign);
+    if (txToSign) pagePromiseFunctions.resolve?.(txToSign);
   }
 
   const onTabMessage = async (req: RuntimePostMessagePayload<EthereumRequest<TransactionRequest>>) => {
     if (!req.msg || !req.msg.params || !req.msg.params.length) {
       const err = getCustomError('Invalid payload')
-      reqPromise.funcs?.reject?.(err);
+      pagePromiseFunctions?.reject?.(err);
       throw err;
     }
 
@@ -56,7 +38,7 @@ const SendTransactionPage = (props: any) => {
     console.log('Transaction:', tx);
     setTxToSign(tx);
     setIsLoaded(true);
-    return reqPromise.promise;
+    return pagePromise;
   }
 
   const calcEstimatedTxCost = (tx: TransactionRequest) => {
@@ -68,16 +50,7 @@ const SendTransactionPage = (props: any) => {
   }
 
   useEffect(() => {
-    newPopupOnMessage<PromiseResult, EthereumRequest<TransactionRequest>>(onTabMessage)
-
-    // getCurrentWindowActiveTabIndex().then(tabId => {
-    //   Browser.tabs.onRemoved.addListener(function tabListener(_tabId) {
-    //     if (_tabId === tabId) {
-    //       Browser.tabs.onRemoved.removeListener(tabListener);
-    //       Browser.runtime.onMessage.removeListener(onTabMessage);
-    //     }
-    //   })
-    // })
+    newPopupOnMessage<TransactionRequest, EthereumRequest<TransactionRequest>>(onTabMessage)
 
     return () => {
       // discardConnect()
