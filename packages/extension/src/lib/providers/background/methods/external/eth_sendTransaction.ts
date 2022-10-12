@@ -1,4 +1,4 @@
-import { ethers, UnsignedTransaction, Wallet } from "ethers";
+import { BigNumber, ethers, UnsignedTransaction, Wallet } from "ethers";
 import { getCustomError } from "../../../../errors";
 import { TransactionRequest } from '@ethersproject/abstract-provider'
 import WindowPromise, { BackgroundOnMessageCallback, sendMessageFromBackgroundToBackground, sendRuntimeMessageToPopup } from "../../../../message-bridge/bridge";
@@ -8,6 +8,7 @@ import Storage, { StorageNamespaces } from "../../../../storage";
 import { getBaseUrl } from "../../../../utils/url";
 import { EthereumRequest } from "../../../types";
 import { UserAccountDTO } from "../internal/initializeWallet";
+import { getCurrentNetwork } from "../../../../requests/toRpcNode";
 
 export const ethSendTransaction: BackgroundOnMessageCallback<string[], EthereumRequest<TransactionRequest>> = async (
     request,
@@ -27,6 +28,7 @@ export const ethSendTransaction: BackgroundOnMessageCallback<string[], EthereumR
 
     const storageAddresses = new Storage(StorageNamespaces.USER_WALLETS);
 
+
     if (!domain) {
         throw getCustomError('ethRequestAccounts: invalid sender origin')
     }
@@ -37,6 +39,27 @@ export const ethSendTransaction: BackgroundOnMessageCallback<string[], EthereumR
         throw getCustomError('ethRequestAccounts: user selected address is null')
     }
 
+    const { rpcProvider } = await getCurrentNetwork()
+
+    if (!txRequest.nonce) {
+        txRequest.nonce = await rpcProvider.getTransactionCount(userSelectedAccount.address)
+    }
+
+    if (!txRequest.gasPrice) {
+        const estimatedGasPrice = await rpcProvider.getFeeData();
+
+        txRequest.gasPrice = estimatedGasPrice.gasPrice?.toHexString() ?? undefined;
+    }
+
+    if (!txRequest.gasLimit) {
+        const estimatedGas = await rpcProvider.estimateGas(txRequest).catch(err => BigNumber.from(1_000_000));
+        txRequest.gasLimit = (txRequest as any).gas?.toString() ?? estimatedGas.toHexString();
+    }
+
+    if (!txRequest.from) {
+        txRequest.from = userSelectedAccount.address;
+    }
+
     // TODO: pass flag to trigger/not-trigger popup menu
     // to be able to use this bg handler for internal purposes 
     const response =
@@ -44,18 +67,21 @@ export const ethSendTransaction: BackgroundOnMessageCallback<string[], EthereumR
         await window.getResponse<TransactionRequest>(
             getPopupPath(UIRoutes.ethSendTransaction.path),
             { method: payload.method, params: payload.params }, true);
-            
+
     if (response.error) throw response.error;
     let tx = response.result ?? txRequest;
+
+    delete (tx as any).gas;
 
     const wallet = new Wallet(userSelectedAccount.privateKey ?? '');
 
     const signedTx = await wallet.signTransaction(tx);
-    console.debug('signed tx');
 
     return sendMessageFromBackgroundToBackground<any, EthereumRequest>({
         method: 'eth_sendRawTransaction',
         params: [signedTx]
-    }, RuntimePostMessagePayloadType.EXTERNAL,
-    origin)
+    },
+        RuntimePostMessagePayloadType.EXTERNAL,
+        origin
+    )
 }

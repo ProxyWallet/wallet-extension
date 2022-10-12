@@ -9,6 +9,7 @@ import { ErrorCodes, EthereumRequest } from '../../../lib/providers/types';
 import { Context } from '../../Context';
 import { Marketplace__factory } from '../../testContractFactory/Marketplace__factory';
 import { TransactionRequest } from '@ethersproject/abstract-provider'
+import { BigNumber, utils } from 'ethers';
 
 type PromiseResult = TransactionRequest;
 
@@ -35,13 +36,11 @@ const SendTransactionPage = (props: any) => {
       }
     });
 
-  const discardConnect = () => {
-    alert('discard')
+  const discardTx = () => {
     reqPromise.funcs?.reject?.(getError(ErrorCodes.userRejected));
   }
 
-  const acceptConnect = () => {
-    alert('accept')
+  const approveTx = () => {
     if (txToSign) reqPromise.funcs.resolve?.(txToSign);
   }
 
@@ -54,9 +53,18 @@ const SendTransactionPage = (props: any) => {
 
     const [tx] = req.msg.params;
 
+    console.log('Transaction:', tx);
     setTxToSign(tx);
     setIsLoaded(true);
     return reqPromise.promise;
+  }
+
+  const calcEstimatedTxCost = (tx: TransactionRequest) => {
+    const gas = BigNumber.from(tx.gasLimit ?? 0)
+    const gasPrice = BigNumber.from(tx.gasPrice ?? 0)
+    const value = BigNumber.from(tx.gasPrice ?? 0)
+
+    return gas.mul(gasPrice).add(value);
   }
 
   useEffect(() => {
@@ -80,25 +88,34 @@ const SendTransactionPage = (props: any) => {
   return (
     <div>
       <div className="flex flex-col w-2/5" style={{ width: '100%' }}>
-        <h1>Transaction</h1>
+        {txToSign ?
+          <>
+            <h1>Transaction</h1>
 
-        <p>Data: {txToSign?.data}</p>
-        <p>To: {txToSign?.to}</p>
-        <p>Value: {txToSign?.value}</p>
+            <p>Data: {txToSign?.data}</p>
+            <p>To: {txToSign?.to}</p>
+            <p>Gas Limit: {txToSign?.gasLimit?.toString()}</p>
+            <p>Value: {utils.formatEther(txToSign?.value ?? 0)}</p>
+            <p>Nonce: {txToSign?.nonce?.toString()}</p>
+            <p>Estimated transaction cost: {
+              utils.formatEther(calcEstimatedTxCost(txToSign))
+            }</p>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row'
+            }}>
+              <button onClick={discardTx} className="font-bold py-2 px-4 rounded">
+                Discard
+              </button>
+              <button onClick={approveTx} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Approve
+              </button>
 
-        <div style={{
-          display: 'flex',
-          flexDirection: 'row'
-        }}>
-          <button className="font-bold py-2 px-4 rounded">
-            Discard
-          </button>
-          <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            Approve
-          </button>
-
-        </div>
-
+            </div>
+          </> :
+          <>
+            Loading
+          </>}
       </div>
     </div>
   );
