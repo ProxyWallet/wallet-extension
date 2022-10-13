@@ -120,12 +120,15 @@ export const newPopupOnMessage = async <TResult = any, TRequest = any>(
 export const sendMessageFromBackgroundToBackground = async <TResponse = unknown, TRequest = any>(
     req: TRequest,
     type: RuntimePostMessagePayloadType,
-    domain: string) => {
+    domain: string, 
+    triggerPopup: boolean = true
+) => {
   
     return <TResponse>handleBackgroundMessage(new RuntimePostMessagePayload({
         destination: PostMessageDestination.BACKGROUND,
         msg: req,
         type,
+        triggerPopup
     }), domain)
 }
 

@@ -53,6 +53,7 @@ export class RuntimePostMessagePayload<TMsg = any> {
     public destination?: PostMessageDestination = PostMessageDestination.CONTENT_SCRIPT;
     public msg?: TMsg = undefined;
     public type: RuntimePostMessagePayloadType = RuntimePostMessagePayloadType.EXTERNAL;
+    public triggerPopup: boolean = true;
 
     constructor(
         init: Partial<RuntimePostMessagePayload>

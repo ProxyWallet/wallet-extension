@@ -10,6 +10,8 @@ import { Context } from '../../Context';
 import { Marketplace__factory } from '../../testContractFactory/Marketplace__factory';
 import { Wallet } from '../../testContractFactory/Wallet';
 import { Wallet__factory } from '../../testContractFactory/Wallet__factory';
+import { TransactionRequest } from '@ethersproject/abstract-provider'
+import { DeployedContractResult } from '../../../lib/providers/background/methods/internal/deployUndasContract';
 
 const MainPage = (props: any) => {
   const { loggedIn, setLoggedIn, signer, setSigner } = useContext<any>(Context);
@@ -30,21 +32,35 @@ const MainPage = (props: any) => {
       method: InternalBgMethods.GET_USER_ADDRESSES,//eth_sendTx
       params: [currentTab.url]
     }, RuntimePostMessagePayloadType.INTERNAL)
+
     console.log('getUserAccounts:', res)
     if (res.error || !res.result) alert('get user error');
     setUserAccounts(res.result);
   }
 
   const deployContract = async () => {
-    // const WalletFactory = new ContractFactory(Wallet__factory.abi,Wallet__factory.bytecode)
-    // console.log('1')
-    // const contract = await WalletFactory.connect().deploy('1','1','1','1','1')
-    // console.log('2')
-    const res = await sendRuntimeMessageToBackground<EthereumRequest, string>({
-      method: InternalBgMethods.DEPLOY_UNDAS_CONTRACT,//eth_sendTx
-      params: []
+    const deployTx = await sendRuntimeMessageToBackground<EthereumRequest, TransactionRequest>({
+      method: InternalBgMethods.GET_UNDAS_CONTRACT_DEPLOY_TX,
+      params: [/* should pass some constructor arguments here */]
     }, RuntimePostMessagePayloadType.INTERNAL)
 
+    alert(JSON.stringify(deployTx))
+
+    if(deployTx.error || !deployTx.result) return;
+
+    const res = await sendRuntimeMessageToBackground<EthereumRequest<TransactionRequest>, DeployedContractResult>({
+      method: InternalBgMethods.DEPLOY_UNDAS_CONTRACT,
+      params: [deployTx.result]
+    }, RuntimePostMessagePayloadType.INTERNAL) 
+
+    console.log('deploy res', res);
+    
+    if(res.error) {
+      alert(`Contract deployment erorr. ${JSON.stringify(res.error)}`)
+      return;
+    }else if(res.result) {
+      alert(`Contract deployed on ${res.result.address}`)
+    }
   }
 
   useEffect(() => {

@@ -10,7 +10,7 @@ import { EthereumRequest } from "../../../types";
 import { UserAccountDTO } from "../internal/initializeWallet";
 import { getCurrentNetwork } from "../../../../requests/toRpcNode";
 
-export const ethSendTransaction: BackgroundOnMessageCallback<string[], EthereumRequest<TransactionRequest>> = async (
+export const ethSendTransaction: BackgroundOnMessageCallback<unknown, EthereumRequest<TransactionRequest>> = async (
     request,
     origin
 ) => {
@@ -60,16 +60,21 @@ export const ethSendTransaction: BackgroundOnMessageCallback<string[], EthereumR
         txRequest.from = userSelectedAccount.address;
     }
 
-    // TODO: pass flag to trigger/not-trigger popup menu
-    // to be able to use this bg handler for internal purposes 
-    const response =
-        // TODO: return only updated gas fees
-        await window.getResponse<TransactionRequest>(
-            getPopupPath(UIRoutes.ethSendTransaction.path),
-            { method: payload.method, params: payload.params }, true);
+    let tx = txRequest;
 
-    if (response.error) throw response.error;
-    let tx = response.result ?? txRequest;
+    if (request.triggerPopup) {
+        // TODO: pass flag to trigger/not-trigger popup menu
+        // to be able to use this bg handler for internal purposes 
+        const response =
+            // TODO: return only updated gas fees
+            await window.getResponse<TransactionRequest>(
+                getPopupPath(UIRoutes.ethSendTransaction.path),
+                { method: payload.method, params: payload.params }, true);
+
+        if (response.error) throw response.error;
+        tx = response.result ?? tx;
+    }
+
 
     delete (tx as any).gas;
 
