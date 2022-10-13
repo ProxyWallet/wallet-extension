@@ -69,7 +69,8 @@ const MainPage = (props: any) => {
           if (acc.isActive) {
             acc.undasContract = {
               address,
-              isActive: false
+              isActive: false,
+              isConnected: false
             }
           }
           return acc;
@@ -89,27 +90,75 @@ const MainPage = (props: any) => {
     if (res.error) alert(`Switch error. Error: ${JSON.stringify(res.error)}`)
 
     if (userAccounts)
-        setUserAccounts(userAccounts.map(acc => {
-          if (acc.isActive) {
-            acc.isActive = false;
-            acc.undasContract = acc.undasContract ? {
-              ...acc.undasContract,
-              isActive: false
-            } : undefined
-          }
+      setUserAccounts(userAccounts.map(acc => {
+        if (acc.isActive) {
+          acc.isActive = false;
+          acc.undasContract = acc.undasContract ? {
+            ...acc.undasContract,
+            isActive: false
+          } : undefined
+        }
 
-          if (
-            getAddress(acc.address) === getAddress(switchTo.address)
-          ) {
-            acc.isActive = true;
-            acc.undasContract = acc.undasContract ? {
-              ...acc.undasContract,
-              isActive: switchToContract
-            } : undefined
-          }
+        if (
+          getAddress(acc.address) === getAddress(switchTo.address)
+        ) {
+          acc.isActive = true;
+          acc.undasContract = acc.undasContract ? {
+            ...acc.undasContract,
+            isActive: switchToContract
+          } : undefined
+        }
 
-          return acc;
-        }))
+        return acc;
+      }))
+  }
+
+  const _accountSwitchConnected = async (address: string) => {
+    if (userAccounts)
+      setUserAccounts(userAccounts.map(acc => {
+        if (getAddress(acc.address) === getAddress(address)) {
+          acc.isConnected = !acc.isConnected;
+        } else if (acc.undasContract && getAddress(acc.undasContract.address) === getAddress(address)) {
+          acc.undasContract.isConnected = !acc.undasContract.isConnected;
+        }
+
+        return acc;
+      }))
+  }
+
+  const _disconnectAccount = async (address: string) => {
+    const res = await sendRuntimeMessageToBackground<EthereumRequest<string>, string>({
+      method: InternalBgMethods.DISCONNECT_ACCOUNT,
+      params: [address]
+    }, RuntimePostMessagePayloadType.INTERNAL)
+    if (res.error) alert(`Disconnect failed. Error: ${JSON.stringify(res.error)}`)
+    _accountSwitchConnected(address);
+  }
+
+  const _connectAccount = async (address: string) => {
+    const res = await sendRuntimeMessageToBackground<EthereumRequest<string>, string>({
+      method: InternalBgMethods.CONNECT_ACCOUNT,
+      params: [address]
+    }, RuntimePostMessagePayloadType.INTERNAL)
+    if (res.error) alert(`Connect failed. Error: ${JSON.stringify(res.error)}`)
+    _accountSwitchConnected(address);
+  }
+
+  const onAccountSwitchConnected = async (address: string, isContract: boolean) => {
+    const acc = userAccounts?.find(acc => {
+      if (isContract && acc.undasContract)
+        return getAddress(acc.undasContract.address) === getAddress(address);
+      else
+        return getAddress(acc.address) === getAddress(address);
+    })
+    if (!acc) {alert('Popup error. Account not found');return;}
+
+    const _isConnected = isContract ? acc.undasContract?.isConnected ?? false : acc.isConnected;
+
+    if (_isConnected) {
+      return _disconnectAccount(address)
+    } else
+      return _connectAccount(address)
   }
 
   const onAddExistingWalletClick = async () => { }
@@ -167,7 +216,9 @@ const MainPage = (props: any) => {
                     <div style={{
                       width: '10px', height: '10px',
                       backgroundColor: account.isConnected ? 'green' : 'red'
-                    }}>
+                    }}
+                      onClick={() => onAccountSwitchConnected(account.address, false)}
+                    >
                     </div>
                   </div>
                   {account.undasContract ?
@@ -191,15 +242,18 @@ const MainPage = (props: any) => {
                         <span>{account.undasContract.address}</span>
                         <div style={{
                           width: '10px', height: '10px',
-                          backgroundColor: account.isConnected ? 'green' : 'red'
-                        }}>
+                          backgroundColor: account.undasContract.isConnected ? 'green' : 'red'
+                        }}
+                          onClick={() => onAccountSwitchConnected(account.undasContract?.address ?? '', true)}>
                         </div>
                       </div>
                     </> :
                     <>
                       {
                         account.isActive &&
-                        <button onClick={deployContract}>Deploy undas proxy contract</button>
+                        <button onClick={deployContract}>
+                          Deploy undas proxy contract
+                        </button>
                       }
                     </>
                   }

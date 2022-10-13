@@ -7,11 +7,15 @@ import { ErrorCodes, EthereumRequest, JsonRpcRequest, SendMessageHandler } from 
 import { generateUuid } from "../utils/uuid";
 import { PostMessageDestination, RuntimeOnMessageResponse, RuntimePostMessagePayload, RuntimePostMessagePayloadType, WindowCSMessageBridge, WindowPostMessagePayload, WindowPostMessagePayloadType } from "./types";
 
-export const sendMessageToNewPopupWindow = async <TMsg = any, TReturn = any>(tabId: number, msg: TMsg) => {
-    console.log('sendMessageToNewPopupWindow');
-    const res = await Browser.tabs.sendMessage(tabId, msg);
-    console.log('sendMessageToNewPopupWindow res', res)
-    return res as RuntimeOnMessageResponse<TReturn>;
+export const sendMessageToNewPopupWindow = async <TMsg = any, TReturn = any>(
+    tabId: number, 
+    msg: TMsg
+): Promise<RuntimeOnMessageResponse<TReturn>> => {
+    try {
+        return { result: await Browser.tabs.sendMessage(tabId, msg) }
+    } catch (error: any) {
+        return { error }
+    }
 }
 
 const sendRuntimeMessage = async <TMsg = any, TReturn = any>(
@@ -120,10 +124,10 @@ export const newPopupOnMessage = async <TResult = any, TRequest = any>(
 export const sendMessageFromBackgroundToBackground = async <TResponse = unknown, TRequest = any>(
     req: TRequest,
     type: RuntimePostMessagePayloadType,
-    domain: string, 
+    domain: string,
     triggerPopup: boolean = true
 ) => {
-  
+
     return <TResponse>handleBackgroundMessage(new RuntimePostMessagePayload({
         destination: PostMessageDestination.BACKGROUND,
         msg: req,

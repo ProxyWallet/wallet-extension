@@ -13,6 +13,7 @@ export type GetAccountsDTO = {
     isActive: boolean,
     undasContract?: {
         address: string,
+        isConnected: boolean
         isActive: boolean
     }
 }
@@ -45,21 +46,25 @@ export const getUserAddresses: BackgroundOnMessageCallback<GetAccountsDTO[], Eth
         throw getCustomError('getUserAddresses: 0 accounts');
     }
 
-    return accounts.map(acc =>{
-        const isSelected = 
-        selectedAccount ?
-            getAddress(acc.address) === getAddress(selectedAccount.address) : false
-            
-        return{
-        address: acc.address,
-        isActive: isSelected,
-        isImported: acc.isImported,
-        isConnected: connectedAccounts ?
-            connectedAccounts.map(getAddress).includes(getAddress(acc.address))
-            : false,
-        undasContract: acc.undasContract ? {
-            address: acc.undasContract,
-            isActive: isSelected ? selectedAccount?.isUndasContractSelected ?? false : false
-        } : undefined
-    }as GetAccountsDTO });
+    return accounts.map(acc => {
+        const isSelected =
+            selectedAccount ?
+                getAddress(acc.address) === getAddress(selectedAccount.address) : false
+
+        return {
+            address: acc.address,
+            isActive: isSelected,
+            isImported: acc.isImported,
+            isConnected: connectedAccounts ?
+                connectedAccounts.map(getAddress).includes(getAddress(acc.address))
+                : false,
+            undasContract: acc.undasContract ? {
+                address: acc.undasContract,
+                isActive: isSelected ? selectedAccount?.isUndasContractSelected ?? false : false,
+                isConnected: connectedAccounts ?
+                    connectedAccounts.map(getAddress).includes(getAddress(acc.undasContract))
+                    : false,
+            } : undefined
+        } as GetAccountsDTO
+    });
 }

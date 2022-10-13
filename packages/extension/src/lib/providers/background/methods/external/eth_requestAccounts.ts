@@ -1,10 +1,10 @@
-import { getCustomError } from "../../../../errors";
+import { getCustomError, getError } from "../../../../errors";
 import WindowPromise, { BackgroundOnMessageCallback, sendRuntimeMessageToPopup } from "../../../../message-bridge/bridge";
 import { RuntimeOnMessageResponse, RuntimePostMessagePayload, RuntimePostMessagePayloadType } from "../../../../message-bridge/types";
 import { getPopupPath, UIRoutes } from "../../../../popup-routes";
 import Storage, { StorageNamespaces } from "../../../../storage";
 import { getBaseUrl } from "../../../../utils/url";
-import { EthereumRequest } from "../../../types";
+import { ErrorCodes, EthereumRequest } from "../../../types";
 import { UserAccount, UserSelectedAccount } from "../internal/initializeWallet";
 
 export const ethRequestAccounts: BackgroundOnMessageCallback<string[], EthereumRequest> = async (
@@ -42,17 +42,22 @@ export const ethRequestAccounts: BackgroundOnMessageCallback<string[], EthereumR
     }
 
     if (!connectedAddresses || !connectedAddresses.length) {
+        if(request.triggerPopup) {
+            const response =
+                await window.getResponse<boolean>(
+                    getPopupPath(UIRoutes.ethConnectDApp.path),
+                    { method: payload.method }, true);
+    
+            if (response.error) throw response.error;
+            if (!response.result) throw getError(ErrorCodes.userRejected);
+        }
 
-        // TODO: pass flag to trigger/not-trigger popup menu
-        // to be able to use this bg handler for internal purposes 
-        const response =
-            await window.getResponse<any>(
-                getPopupPath(UIRoutes.ethConnectDApp.path),
-                { method: payload.method }, true);
 
-        if (response.error) throw response.error;
-
-        connectedAddresses = [userSelectedAccount.address];
+        connectedAddresses = [
+            userSelectedAccount.undasContract && userSelectedAccount.isUndasContractSelected ?
+                userSelectedAccount.undasContract :
+                userSelectedAccount.address
+        ];
     }
 
     await storageDomains.set(domain, connectedAddresses);
