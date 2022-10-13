@@ -7,7 +7,7 @@ import { getPopupPath, UIRoutes } from "../../../../popup-routes";
 import Storage, { StorageNamespaces } from "../../../../storage";
 import { getBaseUrl } from "../../../../utils/url";
 import { EthereumRequest } from "../../../types";
-import { UserAccountDTO } from "../internal/initializeWallet";
+import { UserAccount, UserSelectedAccount } from "../internal/initializeWallet";
 import { getCurrentNetwork } from "../../../../requests/toRpcNode";
 
 export const ethSendTransaction: BackgroundOnMessageCallback<unknown, EthereumRequest<TransactionRequest>> = async (
@@ -33,7 +33,7 @@ export const ethSendTransaction: BackgroundOnMessageCallback<unknown, EthereumRe
         throw getCustomError('ethRequestAccounts: invalid sender origin')
     }
 
-    const userSelectedAccount = await storageAddresses.get<UserAccountDTO>('selectedAccount');
+    const userSelectedAccount = await storageAddresses.get<UserSelectedAccount>('selectedAccount');
 
     if (!userSelectedAccount) {
         throw getCustomError('ethRequestAccounts: user selected address is null')

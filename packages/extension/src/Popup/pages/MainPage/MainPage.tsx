@@ -46,21 +46,25 @@ const MainPage = (props: any) => {
 
     alert(JSON.stringify(deployTx))
 
-    if(deployTx.error || !deployTx.result) return;
+    if (deployTx.error || !deployTx.result) return;
 
     const res = await sendRuntimeMessageToBackground<EthereumRequest<TransactionRequest>, DeployedContractResult>({
       method: InternalBgMethods.DEPLOY_UNDAS_CONTRACT,
       params: [deployTx.result]
-    }, RuntimePostMessagePayloadType.INTERNAL) 
+    }, RuntimePostMessagePayloadType.INTERNAL)
 
     console.log('deploy res', res);
-    
-    if(res.error) {
+
+    if (res.error) {
       alert(`Contract deployment erorr. ${JSON.stringify(res.error)}`)
       return;
-    }else if(res.result) {
+    } else if (res.result) {
       alert(`Contract deployed on ${res.result.address}`)
     }
+  }
+
+  const switchAccount = async (switchTo: GetAccountsDTO, switchToContract: boolean) => {
+    alert(`Switch to ${switchTo.address}, to undas contract: ${switchToContract}`)
   }
 
   useEffect(() => {
@@ -86,20 +90,72 @@ const MainPage = (props: any) => {
                 key={account.address}
                 style={{
                   width: '100%',
-                  height: '30px',
+                }}>
+                <div style={{
+                  width: '100%',
+                  minHeight: '30px',
                   border: '1px solid black',
                   display: 'flex',
-                  flexDirection: 'row',
+                  flexDirection: 'column',
                   justifyContent: 'space-around',
                   alignItems: 'center'
                 }}>
-                {account.isActive && <span>&#10004;</span>}
-                <span>{account.address}</span>
-                <div style={{
-                  width: '10px', height: '10px',
-                  backgroundColor: account.isConnected ? 'green' : 'red'
-                }}>
+
+                  <div style={{
+                    width: '100%',
+                    height: '30px',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-around',
+                    alignItems: 'center'
+                  }}
+                  onClick={()=> {
+                    if(!account.isActive || account.undasContract?.isActive)
+                      switchAccount(account,false)
+                  }}
+                  >
+                    {(account.isActive && !account.undasContract?.isActive) && <span>&#10004;</span>}
+                    <span>{account.address}</span>
+                    <div style={{
+                      width: '10px', height: '10px',
+                      backgroundColor: account.isConnected ? 'green' : 'red'
+                    }}>
+                    </div>
+                  </div>
+                  {account.undasContract ?
+                    <>
+                      <div style={{
+                        width: '100%',
+                        height: '30px',
+                        marginLeft: '25px',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'space-around',
+                        alignItems: 'center'
+                      }}
+                      onClick={()=> {
+                        if(!account.undasContract?.isActive)
+                          switchAccount(account,true)
+                      }}
+                      >
+                        {(account.isActive && account.undasContract.isActive) && <span>&#10004;</span>}
+                        <span>{account.undasContract.address}</span>
+                        <div style={{
+                          width: '10px', height: '10px',
+                          backgroundColor: account.undasContract.isActive ? 'green' : 'red'
+                        }}>
+                        </div>
+                      </div>
+                    </> :
+                    <>
+                      {
+                        account.isActive &&
+                        <button onClick={deployContract}>Deploy undas proxy contract</button>
+                      }
+                    </>
+                  }
                 </div>
+
               </div>
             ))}
           </>
@@ -128,12 +184,6 @@ const MainPage = (props: any) => {
           onClick={() => interactWithContract()}
         >
           Test contract interaction
-        </button>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => deployContract()}
-        >
-          Deploy contract
         </button>
       </div>
     </div>

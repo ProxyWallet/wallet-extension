@@ -5,18 +5,22 @@ import Storage, { StorageNamespaces } from "../../../../storage";
 import { getDeriveAccount } from "../../../../utils/accounts";
 import { EthereumRequest } from "../../../types";
 
-export type InitializeWalletPayload = {
+export type InitializeWalletPayloadDTO = {
     mnemonic: string;
     walletPassword: string
 }
 
-export type UserAccountDTO = {
+export type UserAccount = {
     address: string,
     mnemonicDeriveIndex: number,
     isImported: boolean
     privateKey?: string,
-    undasContract?:string
+    undasContract: string
 }
+
+export type UserSelectedAccount = {
+    isUndasContractSelected: boolean
+} & UserAccount
 
 export const initializeWallet: BackgroundOnMessageCallback<string, EthereumRequest> = async (
     request,
@@ -26,7 +30,7 @@ export const initializeWallet: BackgroundOnMessageCallback<string, EthereumReque
 
     if (!msg || !msg.params?.length) throw getCustomError('Invalid payload');
 
-    const payload = msg.params[0] as InitializeWalletPayload;
+    const payload = msg.params[0] as InitializeWalletPayloadDTO;
 
     console.log('initializePayload', payload);
 
@@ -42,17 +46,22 @@ export const initializeWallet: BackgroundOnMessageCallback<string, EthereumReque
 
     const account = getDeriveAccount(payload.mnemonic, 0);
 
-    const accountDto = {
+    const storageAccount = {
         address: account.address,
         mnemonicDeriveIndex: 0,
         privateKey: account.privateKey,
-        isImported: false // TODO: revise
-    } as UserAccountDTO
+        isImported: false
+    } as UserAccount
+
+    const selectedAccount = {
+        ...storageAccount,
+        isUndasContractSelected: false
+    } as UserSelectedAccount
 
     // TODO: encode pk with wallet password
-    await storageWallets.set('accounts', [accountDto]);
+    await storageWallets.set('accounts', [storageAccount]);
 
-    await storageWallets.set('selectedAccount', accountDto);
+    await storageWallets.set('selectedAccount', selectedAccount);
 
     return account.address;
 }

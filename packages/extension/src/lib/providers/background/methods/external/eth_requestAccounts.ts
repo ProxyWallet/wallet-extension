@@ -5,7 +5,7 @@ import { getPopupPath, UIRoutes } from "../../../../popup-routes";
 import Storage, { StorageNamespaces } from "../../../../storage";
 import { getBaseUrl } from "../../../../utils/url";
 import { EthereumRequest } from "../../../types";
-import { UserAccountDTO } from "../internal/initializeWallet";
+import { UserAccount, UserSelectedAccount } from "../internal/initializeWallet";
 
 export const ethRequestAccounts: BackgroundOnMessageCallback<string[], EthereumRequest> = async (
     request,
@@ -30,7 +30,7 @@ export const ethRequestAccounts: BackgroundOnMessageCallback<string[], EthereumR
 
     let connectedAddresses = await storageDomains.get<string[]>(domain)
 
-    const userSelectedAccount = await storageAddresses.get<UserAccountDTO>('selectedAccount');
+    const userSelectedAccount = await storageAddresses.get<UserSelectedAccount>('selectedAccount');
 
     if (!userSelectedAccount) {
         throw getCustomError('ethRequestAccounts: user selected address is null')

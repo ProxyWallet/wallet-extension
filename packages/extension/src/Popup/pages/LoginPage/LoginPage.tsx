@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { sendRuntimeMessageToBackground } from '../../../lib/message-bridge/bridge';
 import { RuntimePostMessagePayloadType } from '../../../lib/message-bridge/types';
 import { InternalBgMethods } from '../../../lib/message-handlers/background-message-handler';
-import { InitializeWalletPayload } from '../../../lib/providers/background/methods/internal/initializeWallet';
+import { InitializeWalletPayloadDTO } from '../../../lib/providers/background/methods/internal/initializeWallet';
 import { EthereumRequest } from '../../../lib/providers/types';
 
 import { Context } from '../../Context';
@@ -21,7 +21,7 @@ const LoginPage = (props: any) => {
     if (!validatePassword(password)) alert('bad password');
     setIsLoading(true);
     const result =
-      await sendRuntimeMessageToBackground<EthereumRequest<InitializeWalletPayload>, string>({
+      await sendRuntimeMessageToBackground<EthereumRequest<InitializeWalletPayloadDTO>, string>({
         method: InternalBgMethods.INITIALIZE_WALLET,
         params: [{
           mnemonic: mnemonicPhrase,

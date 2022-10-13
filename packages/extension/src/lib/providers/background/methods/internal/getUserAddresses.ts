@@ -4,13 +4,17 @@ import { BackgroundOnMessageCallback } from "../../../../message-bridge/bridge";
 import Storage, { StorageNamespaces } from "../../../../storage";
 import { getBaseUrl } from "../../../../utils/url";
 import { EthereumRequest } from "../../../types";
-import { UserAccountDTO } from "./initializeWallet";
+import { UserAccount, UserSelectedAccount } from "./initializeWallet";
 
 export type GetAccountsDTO = {
     address: string,
     isConnected: boolean,
     isImported: boolean,
-    isActive: boolean
+    isActive: boolean,
+    undasContract?: {
+        address: string,
+        isActive: boolean
+    }
 }
 
 export const getUserAddresses: BackgroundOnMessageCallback<GetAccountsDTO[], EthereumRequest<string>> = async (
@@ -28,8 +32,8 @@ export const getUserAddresses: BackgroundOnMessageCallback<GetAccountsDTO[], Eth
     const storageDomains = new Storage(StorageNamespaces.CONNECTED_DOMAINS);
 
     // TODO: move keys to enum
-    const accounts = await storageWallets.get<UserAccountDTO[]>('accounts');
-    const selectedAccount = await storageWallets.get<UserAccountDTO>('selectedAccount');
+    const accounts = await storageWallets.get<UserAccount[]>('accounts');
+    const selectedAccount = await storageWallets.get<UserSelectedAccount>('selectedAccount');
     const connectedAccounts = await storageDomains.get<string[]>(domain);
 
     console.log('domain', domain);
@@ -41,14 +45,21 @@ export const getUserAddresses: BackgroundOnMessageCallback<GetAccountsDTO[], Eth
         throw getCustomError('getUserAddresses: 0 accounts');
     }
 
-    return accounts.map(acc => ({
+    return accounts.map(acc =>{
+        const isSelected = 
+        selectedAccount ?
+            getAddress(acc.address) === getAddress(selectedAccount.address) : false
+            
+        return{
         address: acc.address,
-        isActive: selectedAccount ?
-            getAddress(acc.address) === getAddress(selectedAccount.address) :
-            false,
+        isActive: isSelected,
         isImported: acc.isImported,
         isConnected: connectedAccounts ?
             connectedAccounts.map(getAddress).includes(getAddress(acc.address))
-            : false
-    } as GetAccountsDTO));
+            : false,
+        undasContract: acc.undasContract ? {
+            address: acc.undasContract,
+            isActive: isSelected ? selectedAccount?.isUndasContractSelected ?? false : false
+        } : undefined
+    }as GetAccountsDTO });
 }

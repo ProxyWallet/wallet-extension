@@ -8,7 +8,7 @@ import { PostMessageDestination, RuntimePostMessagePayload, RuntimePostMessagePa
 import Storage, { StorageNamespaces } from '../../../../storage';
 import { getBaseUrl } from '../../../../utils/url';
 import { EthereumRequest } from '../../../types';
-import { UserAccountDTO } from './initializeWallet';
+import { UserAccount, UserSelectedAccount } from './initializeWallet';
 import { TransactionRequest } from '@ethersproject/abstract-provider'
 import { getCurrentNetwork } from '../../../../requests/toRpcNode';
 
@@ -24,13 +24,13 @@ export const deployUndasContract: BackgroundOnMessageCallback<DeployedContractRe
 
   const storageWallets = new Storage(StorageNamespaces.USER_WALLETS);
 
-  const selectedAccount = await storageWallets.get<UserAccountDTO>(
+  const selectedAccount = await storageWallets.get<UserSelectedAccount>(
     'selectedAccount'
   );
 
   if(!selectedAccount) throw getCustomError('Selected addresses is null');
   
-  const accounts = await storageWallets.get<UserAccountDTO[]>('accounts');
+  const accounts = await storageWallets.get<UserAccount[]>('accounts');
 
   if(!accounts || !accounts.length) throw getCustomError('Accounts is null');
 

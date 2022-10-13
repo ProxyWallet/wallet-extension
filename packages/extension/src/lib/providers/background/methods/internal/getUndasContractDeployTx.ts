@@ -8,7 +8,7 @@ import { getCurrentNetwork } from '../../../../requests/toRpcNode';
 import Storage, { StorageNamespaces } from '../../../../storage';
 import { getBaseUrl } from '../../../../utils/url';
 import { EthereumRequest } from '../../../types';
-import { UserAccountDTO } from './initializeWallet';
+import { UserAccount, UserSelectedAccount } from './initializeWallet';
 import { TransactionRequest } from '@ethersproject/abstract-provider'
 
 export const getUndasContractDeployTx: BackgroundOnMessageCallback<TransactionRequest, EthereumRequest> = async () => {
@@ -16,7 +16,7 @@ export const getUndasContractDeployTx: BackgroundOnMessageCallback<TransactionRe
   const storageWallets = new Storage(StorageNamespaces.USER_WALLETS);
 
   // TODO: move selected account retrieving to helpers
-  const selectedAccount = await storageWallets.get<UserAccountDTO>(
+  const selectedAccount = await storageWallets.get<UserSelectedAccount>(
     'selectedAccount'
   );
 
