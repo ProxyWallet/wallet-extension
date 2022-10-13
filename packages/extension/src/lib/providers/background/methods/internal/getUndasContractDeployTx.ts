@@ -1,7 +1,6 @@
 import { ContractFactory, ethers } from 'ethers';
 import { getAddress } from 'ethers/lib/utils';
-import { TestGameContract__factory } from '../../../../../Popup/testContractFactory/TestGameContract__factory';
-import { Wallet__factory } from '../../../../../Popup/testContractFactory/Wallet__factory';
+import { Wallet, Wallet__factory } from '../../../../../typechain';
 import { getCustomError } from '../../../../errors';
 import { BackgroundOnMessageCallback } from '../../../../message-bridge/bridge';
 import { getCurrentNetwork } from '../../../../requests/toRpcNode';
@@ -28,10 +27,10 @@ export const getUndasContractDeployTx: BackgroundOnMessageCallback<TransactionRe
 
   // TODO: use wallet factory instead
   const factory = new ContractFactory(
-    TestGameContract__factory.abi,
-    TestGameContract__factory.bytecode,
+    Wallet__factory.abi,
+    Wallet__factory.bytecode,
     signer
-  ) as TestGameContract__factory;
+  ) as Wallet__factory;
 
   const deployTx = factory.getDeployTransaction(signer.address);
   return deployTx;
