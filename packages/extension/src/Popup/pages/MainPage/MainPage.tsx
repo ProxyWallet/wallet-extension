@@ -59,7 +59,18 @@ const MainPage = (props: any) => {
       alert(`Contract deployment erorr. ${JSON.stringify(res.error)}`)
       return;
     } else if (res.result) {
-      alert(`Contract deployed on ${res.result.address}`)
+      const address = res.result.address;
+      alert(`Contract deployed on ${address}`)
+      if(userAccounts)
+        setUserAccounts(userAccounts.map(acc=>{
+          if(acc.isActive) {
+            acc.undasContract = {
+              address,
+              isActive: false
+            }
+          }
+          return acc;
+        }))
     }
   }
 
