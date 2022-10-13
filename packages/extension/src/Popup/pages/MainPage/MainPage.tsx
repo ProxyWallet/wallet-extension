@@ -28,6 +28,7 @@ const MainPage = (props: any) => {
     const [currentTab] = await Browser.tabs.query({ active: true, currentWindow: true });
     console.log('currentTab', currentTab);
 
+    // TODO: extract background internal queries to functions
     const res = await sendRuntimeMessageToBackground<EthereumRequest, GetAccountsDTO[]>({
       method: InternalBgMethods.GET_USER_ADDRESSES,//eth_sendTx
       params: [currentTab.url]
@@ -78,6 +79,9 @@ const MainPage = (props: any) => {
     alert(`Switch to ${switchTo.address}, to undas contract: ${switchToContract}`)
   }
 
+  const onAddExistingWalletClick = async () => { }
+  const onCreateNewWalletClick = async () => { }
+
   useEffect(() => {
     getUserAccounts();
   }, [])
@@ -94,8 +98,8 @@ const MainPage = (props: any) => {
         {userAccounts &&
           <>
             <h1>Accounts:</h1>
-            <button>Create new</button>
-            <button>Add existing</button>
+            <button onClick={onCreateNewWalletClick}>Create new</button>
+            <button onClick={onAddExistingWalletClick}>Add existing</button>
             {userAccounts.map(account => (
               <div
                 key={account.address}

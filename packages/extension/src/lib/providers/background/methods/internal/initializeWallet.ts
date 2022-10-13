@@ -12,7 +12,7 @@ export type InitializeWalletPayloadDTO = {
 
 export type UserAccount = {
     address: string,
-    mnemonicDeriveIndex: number,
+    mnemonicDeriveIndex?: number,
     isImported: boolean
     privateKey?: string,
     undasContract: string
