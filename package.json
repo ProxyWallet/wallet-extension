@@ -15,10 +15,11 @@
     "add:extension": "yarn workspace @undas/extension add",
     "test": "yarn workspaces foreach -pv run test",
     "lint": "yarn workspaces foreach run lint",
-    "build:all": "ultra -r build",
+    "build:all": "ultra -r build && yarn run codegen",
     "watch": "concurrently 'npm:watch-*'",
     "build:extension": "cd packages/extension && npm run build",
-    "start:extension": "cd packages/extension && npm run start"
+    "start:extension": "cd packages/extension && npm run start",
+    "codegen": "typechain --target=ethers-v5 --out-dir ./packages/extension/src/typechain './packages/extension/src/abi/*.json'"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.0.3",
