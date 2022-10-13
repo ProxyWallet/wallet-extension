@@ -184,7 +184,7 @@ class WindowPromise {
             type: "popup",
             focused: true,
             height: 600,
-            width: 460,
+            width: 357,
             top: 0
         });
 

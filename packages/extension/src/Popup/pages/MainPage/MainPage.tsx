@@ -12,6 +12,8 @@ import { Wallet } from '../../testContractFactory/Wallet';
 import { Wallet__factory } from '../../testContractFactory/Wallet__factory';
 import { TransactionRequest } from '@ethersproject/abstract-provider'
 import { DeployedContractResult } from '../../../lib/providers/background/methods/internal/deployUndasContract';
+import { SwitchAccountsRequestPayloadDTO } from '../../../lib/providers/background/methods/internal/switchAccount';
+import { getAddress } from 'ethers/lib/utils';
 
 const MainPage = (props: any) => {
   const { loggedIn, setLoggedIn, signer, setSigner } = useContext<any>(Context);
@@ -62,9 +64,9 @@ const MainPage = (props: any) => {
     } else if (res.result) {
       const address = res.result.address;
       alert(`Contract deployed on ${address}`)
-      if(userAccounts)
-        setUserAccounts(userAccounts.map(acc=>{
-          if(acc.isActive) {
+      if (userAccounts)
+        setUserAccounts(userAccounts.map(acc => {
+          if (acc.isActive) {
             acc.undasContract = {
               address,
               isActive: false
@@ -76,7 +78,38 @@ const MainPage = (props: any) => {
   }
 
   const switchAccount = async (switchTo: GetAccountsDTO, switchToContract: boolean) => {
-    alert(`Switch to ${switchTo.address}, to undas contract: ${switchToContract}`)
+    const res = await sendRuntimeMessageToBackground<EthereumRequest<SwitchAccountsRequestPayloadDTO>, string>({
+      method: InternalBgMethods.SWITCH_ACCOUNT,
+      params: [{
+        switchTo: switchTo.address,
+        toContract: switchToContract
+      }]
+    }, RuntimePostMessagePayloadType.INTERNAL)
+
+    if (res.error) alert(`Switch error. Error: ${JSON.stringify(res.error)}`)
+
+    if (userAccounts)
+        setUserAccounts(userAccounts.map(acc => {
+          if (acc.isActive) {
+            acc.isActive = false;
+            acc.undasContract = acc.undasContract ? {
+              ...acc.undasContract,
+              isActive: false
+            } : undefined
+          }
+
+          if (
+            getAddress(acc.address) === getAddress(switchTo.address)
+          ) {
+            acc.isActive = true;
+            acc.undasContract = acc.undasContract ? {
+              ...acc.undasContract,
+              isActive: switchToContract
+            } : undefined
+          }
+
+          return acc;
+        }))
   }
 
   const onAddExistingWalletClick = async () => { }
@@ -124,10 +157,10 @@ const MainPage = (props: any) => {
                     justifyContent: 'space-around',
                     alignItems: 'center'
                   }}
-                  onClick={()=> {
-                    if(!account.isActive || account.undasContract?.isActive)
-                      switchAccount(account,false)
-                  }}
+                    onClick={() => {
+                      if (!account.isActive || account.undasContract?.isActive)
+                        switchAccount(account, false)
+                    }}
                   >
                     {(account.isActive && !account.undasContract?.isActive) && <span>&#10004;</span>}
                     <span>{account.address}</span>
@@ -148,16 +181,17 @@ const MainPage = (props: any) => {
                         justifyContent: 'space-around',
                         alignItems: 'center'
                       }}
-                      onClick={()=> {
-                        if(!account.undasContract?.isActive)
-                          switchAccount(account,true)
-                      }}
+                        onClick={() => {
+                          if (!account.undasContract?.isActive)
+                            switchAccount(account, true)
+                        }}
                       >
+                        <span>&#129302;</span>
                         {(account.isActive && account.undasContract.isActive) && <span>&#10004;</span>}
                         <span>{account.undasContract.address}</span>
                         <div style={{
                           width: '10px', height: '10px',
-                          backgroundColor: account.undasContract.isActive ? 'green' : 'red'
+                          backgroundColor: account.isConnected ? 'green' : 'red'
                         }}>
                         </div>
                       </div>

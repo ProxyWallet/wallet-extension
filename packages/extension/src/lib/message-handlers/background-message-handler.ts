@@ -10,6 +10,7 @@ import { getUndasContractDeployTx } from "../providers/background/methods/intern
 import { getUserAddresses } from "../providers/background/methods/internal/getUserAddresses";
 import { initializeWallet } from "../providers/background/methods/internal/initializeWallet";
 import { isWalletInitialized } from "../providers/background/methods/internal/isWalletInitialized";
+import { switchAccount } from "../providers/background/methods/internal/switchAccount";
 import { EthereumRequest } from "../providers/types";
 import { makeRpcRequest } from "../requests/toRpcNode";
 
@@ -20,6 +21,7 @@ export enum InternalBgMethods {
     GET_USER_ADDRESSES = 'getUserAddresses',
     GET_UNDAS_CONTRACT_DEPLOY_TX = 'getUndasContractDeployTx',
     DEPLOY_UNDAS_CONTRACT = 'deployUndasContract',
+    SWITCH_ACCOUNT = 'switchAccount'
 }
 
 export const handleBackgroundMessage: BackgroundOnMessageCallback = async (request, domain) => {
@@ -72,7 +74,10 @@ const handleInternal: BackgroundOnMessageCallback<any, EthereumRequest> = async 
         return getUndasContractDeployTx(request, domain)
     } else if (request.msg.method === InternalBgMethods.DEPLOY_UNDAS_CONTRACT) {
         return deployUndasContract(request, domain)
+    } else if (request.msg.method === InternalBgMethods.SWITCH_ACCOUNT) {
+        return switchAccount(request, domain)
     }
+    
     else {
         console.log('bg: internal unknown method')
         throw getCustomError('Invalid background method');

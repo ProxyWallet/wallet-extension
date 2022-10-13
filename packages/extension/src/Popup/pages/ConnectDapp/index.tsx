@@ -17,7 +17,6 @@ export const ConnectDapp: React.FC = () => {
     }
 
     const acceptConnect = () => {
-        alert('accept')
         pagePromiseFunctions.resolve?.(true);
     }
 
