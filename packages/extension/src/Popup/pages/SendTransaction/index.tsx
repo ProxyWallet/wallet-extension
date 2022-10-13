@@ -1,8 +1,8 @@
 import React, { useContext, useState, useEffect } from 'react';
-import Browser from 'webextension-polyfill';
+import Browser, { runtime } from 'webextension-polyfill';
 import { getCustomError, getError } from '../../../lib/errors';
 import { newPopupOnMessage, sendRuntimeMessageToBackground } from '../../../lib/message-bridge/bridge';
-import { RuntimePostMessagePayload, RuntimePostMessagePayloadType } from '../../../lib/message-bridge/types';
+import { PostMessageDestination, RuntimePostMessagePayload, RuntimePostMessagePayloadType } from '../../../lib/message-bridge/types';
 import { InternalBgMethods } from '../../../lib/message-handlers/background-message-handler';
 import { GetAccountsDTO } from '../../../lib/providers/background/methods/internal/getUserAddresses';
 import { ErrorCodes, EthereumRequest } from '../../../lib/providers/types';
@@ -10,44 +10,37 @@ import { Context } from '../../Context';
 import { Marketplace__factory } from '../../testContractFactory/Marketplace__factory';
 import { TransactionRequest } from '@ethersproject/abstract-provider'
 import { BigNumber, utils } from 'ethers';
+import { usePagePromise } from '../../hooks/usePagePromise';
+import { PromisePageProps } from '../../types';
 
-type PromiseResult = TransactionRequest;
+type SendTransactionPageProps = {
+  tx?: TransactionRequest
+} & PromisePageProps<TransactionRequest>
 
-type PromiseResultResolve = (res: PromiseResult) => void;
-type PromiseResultReject = (reason?: any) => void;
+const SendTransactionPage: React.FC<SendTransactionPageProps> = ({
+  runtimeListen = false,
+  tx,
+  onRejectCallback,
+  onResolveCallback
+}) => {
 
-const SendTransactionPage = (props: any) => {
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
   const [txToSign, setTxToSign] = useState<TransactionRequest>();
 
-  const [reqPromise] = useState(
-    () => {
-      const funcs = {} as {
-        reject: PromiseResultReject | undefined;
-        resolve: PromiseResultResolve | undefined;
-      }
-
-      return {
-        funcs,
-        promise: new Promise<PromiseResult>((_resolve, _reject) => {
-          funcs.resolve = _resolve;
-          funcs.reject = _reject;
-        })
-      }
-    });
+  const [pagePromise, pagePromiseFunctions] = usePagePromise<TransactionRequest>()
 
   const discardTx = () => {
-    reqPromise.funcs?.reject?.(getError(ErrorCodes.userRejected));
+    pagePromiseFunctions?.reject?.(getError(ErrorCodes.userRejected));
   }
 
   const approveTx = () => {
-    if (txToSign) reqPromise.funcs.resolve?.(txToSign);
+    if (txToSign) pagePromiseFunctions.resolve?.(txToSign);
   }
 
   const onTabMessage = async (req: RuntimePostMessagePayload<EthereumRequest<TransactionRequest>>) => {
     if (!req.msg || !req.msg.params || !req.msg.params.length) {
       const err = getCustomError('Invalid payload')
-      reqPromise.funcs?.reject?.(err);
+      pagePromiseFunctions?.reject?.(err);
       throw err;
     }
 
@@ -56,7 +49,7 @@ const SendTransactionPage = (props: any) => {
     console.log('Transaction:', tx);
     setTxToSign(tx);
     setIsLoaded(true);
-    return reqPromise.promise;
+    return pagePromise;
   }
 
   const calcEstimatedTxCost = (tx: TransactionRequest) => {
@@ -67,23 +60,29 @@ const SendTransactionPage = (props: any) => {
     return gas.mul(gasPrice).add(value);
   }
 
-  useEffect(() => {
-    newPopupOnMessage<PromiseResult, EthereumRequest<TransactionRequest>>(onTabMessage)
+  if (runtimeListen && !tx) {
+    useEffect(() => {
 
-    // getCurrentWindowActiveTabIndex().then(tabId => {
-    //   Browser.tabs.onRemoved.addListener(function tabListener(_tabId) {
-    //     if (_tabId === tabId) {
-    //       Browser.tabs.onRemoved.removeListener(tabListener);
-    //       Browser.runtime.onMessage.removeListener(onTabMessage);
-    //     }
-    //   })
-    // })
+      newPopupOnMessage<TransactionRequest, EthereumRequest<TransactionRequest>>(onTabMessage)
 
-    return () => {
-      // discardConnect()
-      Browser.runtime.onMessage.removeListener(onTabMessage);
-    }
-  }, [])
+      return () => {
+        Browser.runtime.onMessage.removeListener(onTabMessage);
+      }
+    }, [])
+  } else {
+    useEffect(() => {
+      onTabMessage(new RuntimePostMessagePayload({
+        destination: PostMessageDestination.NEW_POPUP,
+        type: RuntimePostMessagePayloadType.EXTERNAL,
+        msg: {
+          method: 'eth_sendTransaction',
+          params: [tx]
+        } as EthereumRequest<TransactionRequest>
+      }))
+        .then(onResolveCallback ?? (() => { }))
+        .catch(onRejectCallback ?? (() => { }))
+    }, [])
+  }
 
   return (
     <div>
