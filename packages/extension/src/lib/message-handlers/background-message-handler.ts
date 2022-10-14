@@ -12,6 +12,7 @@ import { deployUndasContract } from "../providers/background/methods/internal/de
 import { disconnectAccount } from "../providers/background/methods/internal/disconnectAccount";
 import { getUndasContractDeployTx } from "../providers/background/methods/internal/getUndasContractDeployTx";
 import { getUserAddresses } from "../providers/background/methods/internal/getUserAddresses";
+import { importContract } from "../providers/background/methods/internal/importContract";
 import { initializeWallet } from "../providers/background/methods/internal/initializeWallet";
 import { isWalletInitialized } from "../providers/background/methods/internal/isWalletInitialized";
 import { switchAccount } from "../providers/background/methods/internal/switchAccount";
@@ -28,6 +29,7 @@ export enum InternalBgMethods {
     SWITCH_ACCOUNT = 'switchAccount',
     DISCONNECT_ACCOUNT = 'disconnectAccount',
     CONNECT_ACCOUNT = 'connectAccount',
+    IMPORT_CONTRACT="importContract"
 }
 
 export const handleBackgroundMessage: BackgroundOnMessageCallback = async (request, domain) => {
