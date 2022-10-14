@@ -30,6 +30,13 @@ class Storage {
     return null;
   }
 
+  async getAllKeys() {
+    const vals = await this.storage.get(this.namespace);
+    if (vals && vals[this.namespace])
+      return Object.keys(vals[this.namespace]);
+    return [];
+  }
+
   async set<TValue>(key: string, val: TValue) {
     let vals = await this.storage.get(this.namespace);
     vals = vals[this.namespace] ? vals[this.namespace] : {};

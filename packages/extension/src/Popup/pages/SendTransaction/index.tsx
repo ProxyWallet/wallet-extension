@@ -92,6 +92,7 @@ const SendTransactionPage: React.FC<SendTransactionPageProps> = ({
             <h1>Transaction</h1>
 
             <p>Data: {txToSign?.data}</p>
+            <p>From: {txToSign?.from}</p>
             <p>To: {txToSign?.to}</p>
             <p>Gas Limit: {txToSign?.gasLimit?.toString()}</p>
             <p>Value: {utils.formatEther(txToSign?.value ?? 0)}</p>

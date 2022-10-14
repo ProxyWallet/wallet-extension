@@ -25,6 +25,7 @@ export const ethSendTransaction: BackgroundOnMessageCallback<unknown, EthereumRe
 
     const [txRequest] = payload.params;
 
+    console.log('Origin TxRequest', txRequest);
     const window = new WindowPromise();
 
     const storageAddresses = new Storage(StorageNamespaces.USER_WALLETS);
@@ -46,24 +47,28 @@ export const ethSendTransaction: BackgroundOnMessageCallback<unknown, EthereumRe
         txRequest.from = userSelectedAccount.address;
     }
 
-    if(userSelectedAccount.isUndasContractSelected &&
-        txRequest.to !== userSelectedAccount.undasContract ){
+    const isThroughUndasProxy = 
+        userSelectedAccount.undasContract &&
+            userSelectedAccount.isUndasContractSelected &&
+            txRequest.to !== userSelectedAccount.undasContract
 
-        const walletContract = Wallet__factory.connect(userSelectedAccount.undasContract,rpcProvider);
+    if (isThroughUndasProxy) {
+        txRequest.from = userSelectedAccount.address;
 
-        if(!txRequest.to ) return alert("missing argument");
+        const walletContract = Wallet__factory.connect(userSelectedAccount.undasContract, rpcProvider);
 
-        console.log('tx.to',txRequest.to)
-        console.log('tx.datatx.data',txRequest.data)
+        if (!txRequest.to) throw getCustomError("missing argument");
 
-        const pupulatedTx = await walletContract.populateTransaction.makeTransaction(txRequest.to, txRequest.data??'', 
-            txRequest.value??'0');
+        console.log('tx.to', txRequest.to)
+        console.log('tx.datatx.data', txRequest.data)
 
-        console.log('pupulatedTx',pupulatedTx)
-        
-        txRequest.data = pupulatedTx.data
-        txRequest.to = pupulatedTx.to
-        // txRequest.gasLimit = 100000
+        const populatedTx = await walletContract.populateTransaction.makeTransaction(txRequest.to, txRequest.data ?? '',
+            txRequest.value ?? '0');
+
+        console.log('populatedTx', populatedTx)
+
+        txRequest.data = populatedTx.data
+        txRequest.to = populatedTx.to
     }
 
     if (!txRequest.nonce) {
@@ -76,21 +81,21 @@ export const ethSendTransaction: BackgroundOnMessageCallback<unknown, EthereumRe
         txRequest.gasPrice = estimatedGasPrice.gasPrice?.toHexString() ?? undefined;
     }
 
-   
+
     if (!txRequest.gasLimit) {
-        const estimatedGas = await rpcProvider.estimateGas(txRequest).catch(err => BigNumber.from(1_000_000));
-        txRequest.gasLimit = 
-        // (txRequest as any).gas?.toString() ??
-         estimatedGas.toHexString();
+        const estimatedGas = await rpcProvider.estimateGas(txRequest).catch(err => {console.error(err); return BigNumber.from(1_000_000)});
+        txRequest.gasLimit =
+            // (txRequest as any).gas?.toString() ??
+            estimatedGas.toHexString();
     }
 
 
 
     let tx = txRequest;
-    console.log('TX DATA',tx.data)
-    console.log('TX DATA',userSelectedAccount.isUndasContractSelected)
+    console.log('TX DATA', tx.data)
+    console.log('TX DATA', userSelectedAccount.isUndasContractSelected)
 
-    if (request.triggerPopup ) {
+    if (request.triggerPopup) {
         // TODO: pass flag to trigger/not-trigger popup menu
         // to be able to use this bg handler for internal purposes 
         const response =
@@ -101,18 +106,19 @@ export const ethSendTransaction: BackgroundOnMessageCallback<unknown, EthereumRe
 
         if (response.error) throw response.error;
         tx = response.result ?? tx;
-        console.log('trueTX',tx)
+        console.log('trueTX', tx)
     }
 
-    
+    if(isThroughUndasProxy)
+        delete tx.value;
 
     delete (tx as any).gas;
 
     const wallet = new Wallet(userSelectedAccount.privateKey ?? '');
-    console.log('defaurl tx',tx)
+    console.log('defaurl tx', tx)
 
     const signedTx = await wallet.signTransaction(tx);
-    console.log('signedTx',signedTx)
+    console.log('signedTx', signedTx)
 
     return sendMessageFromBackgroundToBackground<any, EthereumRequest>({
         method: 'eth_sendRawTransaction',

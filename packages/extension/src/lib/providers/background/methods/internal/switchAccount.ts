@@ -7,7 +7,7 @@ import Storage, { StorageNamespaces } from "../../../../storage";
 import { getBaseUrl } from "../../../../utils/url";
 import { EthereumRequest, MessageMethod } from "../../../types";
 import { UserAccount, UserSelectedAccount } from "./initializeWallet";
-
+import { sendAccountChangedToTab } from "../../helpers"
 
 export type SwitchAccountsRequestPayloadDTO = {
     switchTo: string;
@@ -24,10 +24,12 @@ export const switchAccount: BackgroundOnMessageCallback<string, EthereumRequest<
     const [switchToAccount] = payload.msg.params;
 
     const storageWallets = new Storage(StorageNamespaces.USER_WALLETS);
+    const storageDomains = new Storage(StorageNamespaces.CONNECTED_DOMAINS);
 
     // TODO: move keys to enum
     const accounts = await storageWallets.get<UserAccount[]>('accounts');
     const selectedAccount = await storageWallets.get<UserSelectedAccount>('selectedAccount');
+    const connectedDomains = await storageDomains.getAllKeys();
 
     if (!accounts || !accounts.length) {
         throw getCustomError('getUserAddresses: 0 accounts');
@@ -55,24 +57,17 @@ export const switchAccount: BackgroundOnMessageCallback<string, EthereumRequest<
     });
 
     // TODO: move to helpers
-    Browser.tabs.query({}).then(tabs => {
-        console.log('tabs', tabs);
+    Promise.all(connectedDomains.map(async domain => {
+        const connectedAccounts = (await storageDomains.get<string[]>(domain) ?? []).map(getAddress);
+        const addressToSwitch = switchToAccount.toContract ?
+        getAddress(accountToSwitch.undasContract) :
+        getAddress(accountToSwitch.address);
 
-        tabs?.forEach(t => {
-            console.log('tab', t);
-            if (!t || !t.id) return;
+        const shouldSwitch = connectedAccounts.includes(addressToSwitch);
+        
+        if (shouldSwitch)
+            sendAccountChangedToTab(domain, addressToSwitch);
+    }))
 
-            sendMessageToTab<EthereumRequest<string>>(
-                t.id,
-                PostMessageDestination.WINDOW,
-                {
-                    method: MessageMethod.changeAddress,
-                    params: [switchToAccount.toContract ? accountToSwitch.undasContract : accountToSwitch.address]
-                }
-            )
-        })
-    })
-
-
-    return accountToSwitch.address
+    return switchToAccount.toContract ? accountToSwitch.undasContract : accountToSwitch.address
 }
