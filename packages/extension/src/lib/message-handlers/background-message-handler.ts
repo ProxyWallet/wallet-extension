@@ -3,6 +3,7 @@ import Browser from "webextension-polyfill";
 import { getCustomError } from "../errors";
 import { BackgroundOnMessageCallback } from "../message-bridge/bridge";
 import { RuntimeOnMessageResponse, RuntimePostMessagePayloadType } from "../message-bridge/types";
+import { ethCall } from "../providers/background/methods/external/eth_call";
 import { ethRequestAccounts } from "../providers/background/methods/external/eth_requestAccounts";
 import { ethSendTransaction } from "../providers/background/methods/external/eth_sendTransaction";
 import { bgIsLocked } from "../providers/background/methods/internal/bgIsLocked";
@@ -56,8 +57,10 @@ const handleExternal: BackgroundOnMessageCallback<any, EthereumRequest> = async 
         return ethRequestAccounts(request, domain);
     } else if (request.msg.method === "eth_sendTransaction") {
         return ethSendTransaction(request, domain)
+    // }else if (request.msg.method === "eth_call") {
+    //     return ethCall(request, domain)
     } else {
-        return makeRpcRequest(request, request.type)
+        return makeRpcRequest(request, domain)
     }
 
 }

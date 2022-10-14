@@ -5,8 +5,7 @@ import { RuntimePostMessagePayload, RuntimePostMessagePayloadType } from "../mes
 import { EthereumRequest, JsonRpcRequest } from "../providers/types";
 
 export const makeRpcRequest: BackgroundOnMessageCallback<unknown, EthereumRequest> = async (
-    request,
-    domain
+    request
 ) => {
     const req = request.msg;
 

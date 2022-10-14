@@ -8,14 +8,14 @@ import Storage, { StorageNamespaces } from "../../../../storage";
 import { getBaseUrl } from "../../../../utils/url";
 import { EthereumRequest } from "../../../types";
 import { UserAccount, UserSelectedAccount } from "../internal/initializeWallet";
-import { getCurrentNetwork } from "../../../../requests/toRpcNode";
+import { getCurrentNetwork, makeRpcRequest } from "../../../../requests/toRpcNode";
 import { Wallet__factory } from "../../../../../typechain";
 
-export const ethSendTransaction: BackgroundOnMessageCallback<unknown, EthereumRequest<TransactionRequest>> = async (
+export const ethCall: BackgroundOnMessageCallback<unknown, EthereumRequest<TransactionRequest>> = async (
     request,
     origin,
 ) => {
-    console.log('ethRequestAccounts');
+    console.log('ethCall');
     const payload = request.msg;
     const domain = getBaseUrl(origin);
 
@@ -24,9 +24,6 @@ export const ethSendTransaction: BackgroundOnMessageCallback<unknown, EthereumRe
     }
 
     const [txRequest] = payload.params;
-
-    console.log('Origin TxRequest', txRequest);
-    const window = new WindowPromise();
 
     const storageAddresses = new Storage(StorageNamespaces.USER_WALLETS);
 
@@ -42,10 +39,6 @@ export const ethSendTransaction: BackgroundOnMessageCallback<unknown, EthereumRe
     }
 
     const { rpcProvider } = await getCurrentNetwork()
-
-    if (!txRequest.from) {
-        txRequest.from = userSelectedAccount.address;
-    }
 
     const isThroughUndasProxy = 
         userSelectedAccount.undasContract &&
@@ -69,67 +62,31 @@ export const ethSendTransaction: BackgroundOnMessageCallback<unknown, EthereumRe
 
         txRequest.data = populatedTx.data
         txRequest.to = populatedTx.to
+        delete txRequest.value;
     }
 
-    if (!txRequest.nonce) {
-        txRequest.nonce = await rpcProvider.getTransactionCount(userSelectedAccount.address)
-    }
+    // if (!txRequest.nonce) {
+    //     txRequest.nonce = await rpcProvider.getTransactionCount(userSelectedAccount.address)
+    // }
 
-    if (!txRequest.gasPrice) {
-        const estimatedGasPrice = await rpcProvider.getFeeData();
+    // // if (!txRequest.gasPrice) {
+    // //     const estimatedGasPrice = await rpcProvider.getFeeData();
 
-        txRequest.gasPrice = estimatedGasPrice.gasPrice?.toHexString() ?? undefined;
-    }
+    // //     txRequest.gasPrice = estimatedGasPrice.gasPrice?.toHexString() ?? undefined;
+    // // }
 
+    // if (!txRequest.gasLimit) {
+    //     const estimatedGas = await rpcProvider.estimateGas(txRequest).catch(err => {console.error(err); return BigNumber.from(1_000_000)});
+    //     txRequest.gasLimit =
+    //         // (txRequest as any).gas?.toString() ??
+    //         estimatedGas.toHexString();
+    // }
 
-    if (!txRequest.gasLimit) {
-        const estimatedGas = await rpcProvider.estimateGas(txRequest).catch(err => {console.error(err); return BigNumber.from(1_000_000)});
-        txRequest.gasLimit =
-            // (txRequest as any).gas?.toString() ??
-            estimatedGas.toHexString();
-    }
+    delete (txRequest as any).gas;
 
+    // payload.params[0] = txRequest;
 
-
-    let tx = txRequest;
-    console.log('TX DATA', tx.data)
-    console.log('TX DATA', userSelectedAccount.isUndasContractSelected)
-
-    if (request.triggerPopup) {
-        // TODO: pass flag to trigger/not-trigger popup menu
-        // to be able to use this bg handler for internal purposes 
-        const response =
-            // TODO: return only updated gas fees
-            await window.getResponse<TransactionRequest>(
-                getPopupPath(UIRoutes.ethSendTransaction.path),
-                { method: payload.method, params: [tx] }, true);
-
-        if (response.error) throw response.error;
-        tx = response.result ?? tx;
-        console.log('trueTX', tx)
-    }
-
-    if(isThroughUndasProxy)
-        delete tx.value;
-
-    delete (tx as any).gas;
+    console.log('eth call request', request);
     
-    delete tx.maxFeePerGas;
-    delete tx.maxPriorityFeePerGas;
-
-    const wallet = new Wallet(userSelectedAccount.privateKey ?? '');
-    console.log('defaurl tx', tx)
-
-    const signedTx = await wallet.signTransaction(tx);
-    console.log('signedTx', signedTx);
-
-    (payload.params as any[])[0] = signedTx;
-    
-    return sendMessageFromBackgroundToBackground<any, EthereumRequest>({
-        method: 'eth_sendRawTransaction',
-        params: payload.params
-    },
-        RuntimePostMessagePayloadType.EXTERNAL,
-        origin
-    )
+    return makeRpcRequest(request, origin);
 }
