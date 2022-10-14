@@ -16,7 +16,7 @@ initWindowBridge('inject');
 
 const onWindowMessage = async (...args: any[]) => {
     const msg = args[0] as WindowPostMessagePayload;
-    console.log('WindowToCS Response Injected', msg)
+    console.log('WindowToCS Response Injected', args)
     window.undasWallet?.provider?.handleMessage(msg.msg ?? '');
 }
 // TODO: revise

@@ -1,6 +1,6 @@
 
 import browser from "webextension-polyfill";
-import { sendRuntimeMessageToBackground } from "../lib/message-bridge/bridge";
+import { contentOnMessage, sendRuntimeMessageToBackground, windowOnRuntimeMessage } from "../lib/message-bridge/bridge";
 import { CS_WINDOW_BRIDGE, initWindowBridge } from "../lib/message-bridge/event-bridge";
 import { PostMessageDestination, RuntimePostMessagePayload, WindowPostMessagePayload, WindowPostMessagePayloadType, } from "../lib/message-bridge/types";
 import { EthereumRequest } from "../lib/providers/types";
@@ -56,5 +56,16 @@ const onWindowMessage = async (...args: any[]) => {
 initWindowBridge('content-script');
 
 CS_WINDOW_BRIDGE.windowSubscribeRequest(onWindowMessage)
+
+windowOnRuntimeMessage(async (req, domain) => {
+  console.log('windowOnRuntimeMessage', req.msg);
+  
+  window.postMessage(new WindowPostMessagePayload({
+    msg: JSON.stringify(req.msg),
+    type: WindowPostMessagePayloadType.RESPONSE
+  }).toJson())
+
+  return undefined;
+})
 
 injectScript();

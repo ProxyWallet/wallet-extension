@@ -1,9 +1,11 @@
 import { getAddress } from "ethers/lib/utils";
+import Browser from "webextension-polyfill";
 import { getCustomError } from "../../../../errors";
-import { BackgroundOnMessageCallback } from "../../../../message-bridge/bridge";
+import { BackgroundOnMessageCallback, sendMessageToTab, sendRuntimeMessageToWindow } from "../../../../message-bridge/bridge";
+import { PostMessageDestination } from "../../../../message-bridge/types";
 import Storage, { StorageNamespaces } from "../../../../storage";
 import { getBaseUrl } from "../../../../utils/url";
-import { EthereumRequest } from "../../../types";
+import { EthereumRequest, MessageMethod } from "../../../types";
 import { UserAccount, UserSelectedAccount } from "./initializeWallet";
 
 
@@ -50,7 +52,27 @@ export const switchAccount: BackgroundOnMessageCallback<string, EthereumRequest<
     await storageWallets.set<UserSelectedAccount>('selectedAccount', {
         ...accountToSwitch,
         isUndasContractSelected: switchToAccount.toContract
+    });
+
+    // TODO: move to helpers
+    Browser.tabs.query({}).then(tabs => {
+        console.log('tabs', tabs);
+
+        tabs?.forEach(t => {
+            console.log('tab', t);
+            if (!t || !t.id) return;
+
+            sendMessageToTab<EthereumRequest<string>>(
+                t.id,
+                PostMessageDestination.WINDOW,
+                {
+                    method: MessageMethod.changeAddress,
+                    params: [switchToAccount.toContract ? accountToSwitch.undasContract : accountToSwitch.address]
+                }
+            )
+        })
     })
+
 
     return accountToSwitch.address
 }

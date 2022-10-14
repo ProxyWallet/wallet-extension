@@ -8,11 +8,30 @@ import { generateUuid } from "../utils/uuid";
 import { PostMessageDestination, RuntimeOnMessageResponse, RuntimePostMessagePayload, RuntimePostMessagePayloadType, WindowCSMessageBridge, WindowPostMessagePayload, WindowPostMessagePayloadType } from "./types";
 
 export const sendMessageToNewPopupWindow = async <TMsg = any, TReturn = any>(
-    tabId: number, 
+    tabId: number,
     msg: TMsg
 ): Promise<RuntimeOnMessageResponse<TReturn>> => {
     try {
         return { result: await Browser.tabs.sendMessage(tabId, msg) }
+    } catch (error: any) {
+        return { error }
+    }
+}
+
+export const sendMessageToTab = async <TMsg = any, TReturn = any>(
+    tabId: number,
+    destination: PostMessageDestination,
+    msg: TMsg,
+    type: RuntimePostMessagePayloadType = RuntimePostMessagePayloadType.EXTERNAL
+): Promise<RuntimeOnMessageResponse<TReturn>> => {
+    try {
+        return {
+            result: await Browser.tabs.sendMessage(tabId, new RuntimePostMessagePayload<TMsg>({
+                msg: msg,
+                destination: destination,
+                type
+            }))
+        }
     } catch (error: any) {
         return { error }
     }
@@ -24,6 +43,7 @@ const sendRuntimeMessage = async <TMsg = any, TReturn = any>(
     type: RuntimePostMessagePayloadType = RuntimePostMessagePayloadType.EXTERNAL
 ) => {
     return new Promise<RuntimeOnMessageResponse<TReturn>>((resolve, _) => {
+        console.debug(`send message to ${destination}`, msg);
         chrome.runtime.sendMessage(new RuntimePostMessagePayload<TMsg>({
             msg: msg,
             destination: destination,
@@ -46,10 +66,17 @@ export const sendRuntimeMessageToPopup = <TMsg = any, TReturn = any>(msg: TMsg) 
     return sendRuntimeMessage<TMsg, TReturn>(PostMessageDestination.POPUP, msg);
 }
 
+export const sendRuntimeMessageToWindow = <TMsg = any, TReturn = any>(msg: TMsg) => {
+    return sendRuntimeMessage<TMsg, TReturn>(PostMessageDestination.WINDOW, msg);
+}
+
 export type BackgroundOnMessageCallback<TResult = any, TRequest = any> =
     (request: RuntimePostMessagePayload<TRequest>, domain: string) => Promise<TResult>
 
 export type PopupOnMessageCallback<TResult = any, TRequest = any> =
+    BackgroundOnMessageCallback<TResult, TRequest>
+
+export type ContentOnMessageCallback<TResult = any, TRequest = any> =
     BackgroundOnMessageCallback<TResult, TRequest>
 
 export type NewPopupWindowOnMessageCallback<TResult = any, TRequest = any> =
@@ -99,6 +126,18 @@ export const popupOnMessage = async (
     callback: PopupOnMessageCallback
 ) => {
     runtimeOnMessage(PostMessageDestination.POPUP, callback)
+}
+
+export const contentOnMessage = async (
+    callback: PopupOnMessageCallback
+) => {
+    runtimeOnMessage(PostMessageDestination.CONTENT_SCRIPT, callback)
+}
+
+export const windowOnRuntimeMessage = async (
+    callback: PopupOnMessageCallback
+) => {
+    runtimeOnMessage(PostMessageDestination.WINDOW, callback)
 }
 
 export const newPopupOnMessage = async <TResult = any, TRequest = any>(

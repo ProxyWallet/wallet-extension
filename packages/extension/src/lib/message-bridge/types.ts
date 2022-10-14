@@ -8,10 +8,11 @@ export enum WindowPostMessagePayloadType {
 }
 
 export enum PostMessageDestination {
-    BACKGROUND = 'background',
+    WINDOW = 'window',
     CONTENT_SCRIPT = 'content-script',
-    POPUP = 'popup',
+    BACKGROUND = 'background',
     NEW_POPUP = 'new-popup',
+    POPUP = 'popup',
 
 }
 

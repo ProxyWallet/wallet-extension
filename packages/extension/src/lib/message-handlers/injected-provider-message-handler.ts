@@ -52,7 +52,9 @@ const handleIncomingMessage: HandleIncomingMessageFunction = (
                 _provider.emit(EmitEvent.chainChanged, chainId);
             }
         } else if (jsonMsg.method === MessageMethod.changeAddress) {
+            console.log('CHANGE ADDRESS!!!!');
             const address = jsonMsg.params[0] as string;
+            alert(`changed to ${address}`)
             if (_provider.selectedAddress !== address) {
                 _provider.selectedAddress = address;
                 _provider.emit(EmitEvent.accountsChanged, [address]);

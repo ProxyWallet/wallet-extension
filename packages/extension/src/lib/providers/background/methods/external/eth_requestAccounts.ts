@@ -47,20 +47,29 @@ export const ethRequestAccounts: BackgroundOnMessageCallback<string[], EthereumR
                 await window.getResponse<boolean>(
                     getPopupPath(UIRoutes.ethConnectDApp.path),
                     { method: payload.method }, true);
-    
+            
             if (response.error) throw response.error;
             if (!response.result) throw getError(ErrorCodes.userRejected);
         }
-
 
         connectedAddresses = [
             userSelectedAccount.undasContract && userSelectedAccount.isUndasContractSelected ?
                 userSelectedAccount.undasContract :
                 userSelectedAccount.address
         ];
+
+        await storageDomains.set(domain, connectedAddresses);
     }
 
-    await storageDomains.set(domain, connectedAddresses);
+    const _selectedAddress = connectedAddresses.find( v=>
+        v === (userSelectedAccount.isUndasContractSelected ? 
+        userSelectedAccount.undasContract :
+         userSelectedAccount.address)
+    );
 
-    return [connectedAddresses[0]];
+    return [
+        _selectedAddress ? 
+            _selectedAddress :
+            connectedAddresses[0]
+    ]
 }
