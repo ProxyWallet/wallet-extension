@@ -35,7 +35,7 @@ export interface WalletInterface extends utils.Interface {
     "blacklistedActionAutoExecute(address,bytes)": FunctionFragment;
     "blacklistedFunctions(address,uint256)": FunctionFragment;
     "isApprovedToSetBlacklist(address)": FunctionFragment;
-    "makeTransaction(address,bytes)": FunctionFragment;
+    "makeTransaction(address,bytes,uint256)": FunctionFragment;
     "owner()": FunctionFragment;
     "setBlacklistedActions(address,bytes,uint256,address,bytes)": FunctionFragment;
     "setBlacklistedContractFunction(address,bytes,uint256,address,bytes)": FunctionFragment;
@@ -81,7 +81,11 @@ export interface WalletInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "makeTransaction",
-    values: [PromiseOrValue<string>, PromiseOrValue<BytesLike>]
+    values: [
+      PromiseOrValue<string>,
+      PromiseOrValue<BytesLike>,
+      PromiseOrValue<BigNumberish>
+    ]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
@@ -260,6 +264,7 @@ export interface Wallet extends BaseContract {
     makeTransaction(
       _to: PromiseOrValue<string>,
       callBytes: PromiseOrValue<BytesLike>,
+      value: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -339,6 +344,7 @@ export interface Wallet extends BaseContract {
   makeTransaction(
     _to: PromiseOrValue<string>,
     callBytes: PromiseOrValue<BytesLike>,
+    value: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -418,8 +424,9 @@ export interface Wallet extends BaseContract {
     makeTransaction(
       _to: PromiseOrValue<string>,
       callBytes: PromiseOrValue<BytesLike>,
+      value: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<void>;
+    ): Promise<string>;
 
     owner(overrides?: CallOverrides): Promise<string>;
 
@@ -504,6 +511,7 @@ export interface Wallet extends BaseContract {
     makeTransaction(
       _to: PromiseOrValue<string>,
       callBytes: PromiseOrValue<BytesLike>,
+      value: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -566,6 +574,7 @@ export interface Wallet extends BaseContract {
     makeTransaction(
       _to: PromiseOrValue<string>,
       callBytes: PromiseOrValue<BytesLike>,
+      value: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
