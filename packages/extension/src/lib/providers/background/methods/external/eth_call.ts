@@ -10,12 +10,14 @@ import { EthereumRequest } from "../../../types";
 import { UserAccount, UserSelectedAccount } from "../internal/initializeWallet";
 import { getCurrentNetwork, makeRpcRequest } from "../../../../requests/toRpcNode";
 import { Wallet__factory } from "../../../../../typechain";
+import { getActiveAccountForSite } from "../../helpers";
+import { getAddress } from "ethers/lib/utils";
 
 export const ethCall: BackgroundOnMessageCallback<unknown, EthereumRequest<TransactionRequest>> = async (
     request,
     origin,
 ) => {
-    console.log('ethCall');
+    console.log('ethCall', request);
     const payload = request.msg;
     const domain = getBaseUrl(origin);
 
@@ -25,44 +27,44 @@ export const ethCall: BackgroundOnMessageCallback<unknown, EthereumRequest<Trans
 
     const [txRequest] = payload.params;
 
-    const storageAddresses = new Storage(StorageNamespaces.USER_WALLETS);
-
-
     if (!domain) {
         throw getCustomError('ethRequestAccounts: invalid sender origin')
     }
 
-    const userSelectedAccount = await storageAddresses.get<UserSelectedAccount>('selectedAccount');
+    const userSelectedAccount = await getActiveAccountForSite(domain);
 
     if (!userSelectedAccount) {
-        throw getCustomError('ethRequestAccounts: user selected address is null')
+        throw getCustomError('Account is not connected')
     }
-
-    const { rpcProvider } = await getCurrentNetwork()
 
     const isThroughUndasProxy = 
         userSelectedAccount.undasContract &&
             userSelectedAccount.isUndasContractSelected &&
-            txRequest.to !== userSelectedAccount.undasContract
+            txRequest.to && 
+            getAddress(txRequest.to) !== getAddress(userSelectedAccount.undasContract)
 
     if (isThroughUndasProxy) {
+        console.log('eth_call through undas')
         txRequest.from = userSelectedAccount.address;
 
-        const walletContract = Wallet__factory.connect(userSelectedAccount.undasContract, rpcProvider);
+        // const walletContract = Wallet__factory.connect(userSelectedAccount.undasContract, rpcProvider);
 
-        if (!txRequest.to) throw getCustomError("missing argument");
+        // if (!txRequest.to) throw getCustomError("missing argument");
 
-        console.log('tx.to', txRequest.to)
-        console.log('tx.datatx.data', txRequest.data)
+        // console.log('tx.to', txRequest.to)
+        // console.log('tx.datatx.data', txRequest.data)
 
-        const populatedTx = await walletContract.populateTransaction.makeTransaction(txRequest.to, txRequest.data ?? '',
-            txRequest.value ?? '0');
+        // const populatedTx = await walletContract.populateTransaction.makeTransaction(
+        //     txRequest.to, 
+        //     txRequest.data ?? '',
+        //     txRequest.value ?? '0');
 
-        console.log('populatedTx', populatedTx)
+        // console.log('populatedTx', populatedTx)
 
-        txRequest.data = populatedTx.data
-        txRequest.to = populatedTx.to
-        delete txRequest.value;
+        // txRequest.data = populatedTx.data
+        // txRequest.to = populatedTx.to
+
+        // delete txRequest.value;
     }
 
     // if (!txRequest.nonce) {
@@ -82,7 +84,7 @@ export const ethCall: BackgroundOnMessageCallback<unknown, EthereumRequest<Trans
     //         estimatedGas.toHexString();
     // }
 
-    delete (txRequest as any).gas;
+    // delete (txRequest as any).gas;
 
     // payload.params[0] = txRequest;
 

@@ -59,8 +59,8 @@ const handleExternal: BackgroundOnMessageCallback<any, EthereumRequest> = async 
         return ethRequestAccounts(request, domain);
     } else if (request.msg.method === "eth_sendTransaction") {
         return ethSendTransaction(request, domain)
-    // }else if (request.msg.method === "eth_call") {
-    //     return ethCall(request, domain)
+    }else if (request.msg.method === "eth_call") {
+        return ethCall(request, domain)
     } else {
         return makeRpcRequest(request, domain)
     }
