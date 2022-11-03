@@ -1,8 +1,8 @@
 
 import browser from "webextension-polyfill";
-import { contentOnMessage, sendRuntimeMessageToBackground, windowOnRuntimeMessage } from "../lib/message-bridge/bridge";
+import { sendRuntimeMessageToBackground, windowOnRuntimeMessage } from "../lib/message-bridge/bridge";
 import { CS_WINDOW_BRIDGE, initWindowBridge } from "../lib/message-bridge/event-bridge";
-import { PostMessageDestination, RuntimePostMessagePayload, WindowPostMessagePayload, WindowPostMessagePayloadType, } from "../lib/message-bridge/types";
+import { WindowPostMessagePayload, WindowPostMessagePayloadType, } from "../lib/message-bridge/types";
 import { EthereumRequest } from "../lib/providers/types";
 
 function injectScript() {

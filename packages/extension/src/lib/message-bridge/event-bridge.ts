@@ -7,7 +7,7 @@ export function windowOnMessage(
 
     const handleMessage = (event: MessageEvent) => {
         console.log('handleMessage', event.data)
-        // if (event.origin !== window.origin) return;
+
         const msg = WindowPostMessagePayload.fromJson(event.data);
 
         if (msg) {
