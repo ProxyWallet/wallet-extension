@@ -57,26 +57,26 @@ var options = {
   },
   module: {
     rules: [
-      // {
-      //   // look for .css or .scss files
-      //   test: /\.(css|scss)$/,
-      //   // in the `src` directory
-      //   use: [
+    //   {
+    //     // look for .css or .scss files
+    //     test: /\.(css|scss)$/,
+    //     // in the `src` directory
+    //     use: [
 
-      //     {
-      //       loader: 'style-loader',
-      //     },
-      //     {
-      //       loader: 'css-loader',
-      //     },
-      //     {
-      //       loader: 'sass-loader',
-      //       options: {
-      //         sourceMap: true,
-      //       },
-      //     },
-      //   ],
-      // },
+    //       {
+    //         loader: 'style-loader',
+    //       },
+    //       {
+    //         loader: 'css-loader',
+    //       },
+    //       {
+    //         loader: 'sass-loader',
+    //         options: {
+    //           sourceMap: true,
+    //         },
+    //       },
+    //     ],
+    //   },
       {
         test: /\.css$/i,
         use: ['style-loader', 'css-loader', 'postcss-loader'],

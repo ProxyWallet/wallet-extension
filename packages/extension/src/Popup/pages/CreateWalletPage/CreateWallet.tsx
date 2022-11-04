@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const CreateWalletPage = (props: any) => {
+const CreateWalletPage = () => {
   const [createdWallet, setCreatedWalled] = useState<any>();
   const navigate = useNavigate();
 
@@ -15,7 +15,7 @@ const CreateWalletPage = (props: any) => {
   return (
     <div>
       <button
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        className="button"
         onClick={() => createWallet()}
       >
         Generate wallet
@@ -29,14 +29,14 @@ const CreateWalletPage = (props: any) => {
         ''
       )}
       <button
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        className="button"
         onClick={() => navigate(-1)}
       >
         Back
       </button>
       {createdWallet ? (
         <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          className="button"
           onClick={() => navigate('/login-page')}
         >
           Next

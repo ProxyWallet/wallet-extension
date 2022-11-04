@@ -1,0 +1,63 @@
+@import '../../index.css';
+
+.main {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.check {
+  font-size: 100px;
+  color: red;
+}
+
+.import-contract {
+  display: flex;
+  flex-direction: column;
+}
+
+.import-contract__input {
+  border: 1px solid black;
+}
+
+.address {
+  width: 100%;
+  min-height: 30px;
+  border: 1px solid black;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.address-active {
+  width: 100%;
+  height: 30px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.account-address {
+  width: 10px;
+  height: 10px;
+}
+
+.account-address_success {
+  background-color: green;
+}
+
+.account-address_error {
+  background-color: red;
+}
+
+.account-undascontract {
+  width: 100%;
+  height: 30px;
+  margin-left: 25px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+}

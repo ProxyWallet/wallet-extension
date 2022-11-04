@@ -1,4 +1,4 @@
-import './Popup.css';
+import './index.css';
 
 import React, { useEffect, useState } from 'react';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
@@ -10,16 +10,16 @@ import EnterPasswordPage from './pages/EnterPasswordPage/EnterPasswordPage';
 import CreateWalletPage from './pages/CreateWalletPage/CreateWallet';
 import { isPresentCryptedPrivateKeyAtStorage } from './storageUtils/utils';
 import LoginPage from './pages/LoginPage/LoginPage';
-import { ConnectDapp } from './pages/ConnectDapp';
-import { Loading } from './pages/Loading';
+import { ConnectDapp } from './pages/ConnectDapp/ConnectDapp';
+import { Loading } from './pages/Loading/Loading';
 import { getPopupPath, UIRoutes } from '../lib/popup-routes';
 import { sendRuntimeMessageToBackground } from '../lib/message-bridge/bridge';
 import { EthereumRequest } from '../lib/providers/types';
 import { InternalBgMethods } from '../lib/message-handlers/background-message-handler';
 import Browser from 'webextension-polyfill';
-import { InitializeWallet } from './pages/InitializeWallet';
+import { InitializeWallet } from './pages/InitializeWallet/InitializeWallet';
 import { RuntimePostMessagePayloadType } from '../lib/message-bridge/types';
-import SendTransactionPage from './pages/SendTransaction';
+import SendTransactionPage from './pages/SendTransaction/SendTransaction';
 
 function Popup() {
   const [loggedIn, setLoggedIn] = useState(false);

@@ -1,0 +1,17 @@
+@font-face {
+  src: url('../../fonts/Ubuntu/Ubuntu-Regular.ttf') format('truetype');
+  font-family: 'Oswald-Regular';
+  font-weight: 400;
+}
+
+@font-face {
+  src: url('../../fonts/Ubuntu/Ubuntu-Bold.ttf') format('truetype');
+  font-family: 'Oswald-Bold';
+  font-weight: 700;
+}
+
+@font-face {
+  src: url('../../fonts/Ubuntu/Ubuntu-Medium.ttf') format('truetype');
+  font-family: 'Oswald-Medium';
+  font-weight: 500;
+}

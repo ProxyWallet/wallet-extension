@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Context } from '../../Context';
 import { decryptPrivatKeyViaPassword } from '../../storageUtils/utils';
 
+import './EnterPasswordPage.css';
+
 const EnterPasswordPage = (props: any) => {
   const { loggedIn, setLoggedIn, signer, setSigner } = useContext<any>(Context);
   const [password, setPassword] = useState<string>();
@@ -25,23 +27,17 @@ const EnterPasswordPage = (props: any) => {
   }
 
   return (
-    <div className="flex flex-col w-2/5">
+    <div className="password">
       <h2>Login</h2>
       <input
         type="text"
         placeholder="enter password page"
         onChange={(e) => setPassword(e.target.value)}
       />
-      <button
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        onClick={() => decrypt()}
-      >
+      <button className="button" onClick={() => decrypt()}>
         LogIn
       </button>
-      <button
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        onClick={() => navigate('/create-wallet')}
-      >
+      <button className="button" onClick={() => navigate('/create-wallet')}>
         Create new
       </button>
     </div>

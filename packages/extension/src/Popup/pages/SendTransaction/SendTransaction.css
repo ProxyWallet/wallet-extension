@@ -1,0 +1,11 @@
+@import '../../index.css';
+
+.transaction {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.transaction__buttons {
+    display: flex;
+}

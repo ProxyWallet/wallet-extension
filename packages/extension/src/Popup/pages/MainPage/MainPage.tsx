@@ -17,11 +17,13 @@ import { getAddress } from 'ethers/lib/utils';
 import { importContract } from '../../../lib/providers/background/methods/internal/importContract';
 import { getUndasContractAddress } from '../../../lib/providers/background/methods/internal/getUndasContractAddress';
 
-const MainPage = (props: any) => {
+import MainPageLayout from '../../components/MainPageLayout/MainPageLayout';
+
+const MainPage = () => {
   const { loggedIn, setLoggedIn, signer, setSigner } = useContext<any>(Context);
   const [userAccounts, setUserAccounts] = useState<GetAccountsDTO[]>();
-  const [importedContract, setImportedContract] = useState<any>();
-  const [isUndasContract, setIsUndasContract] = useState<any>();
+  const [importedContract, setImportedContract] = useState<string>();
+  const [isUndasContract, setIsUndasContract] = useState<boolean>();
 
   async function isUndasContractPresent() {
     const contractAddr = await getUndasContractAddress();
@@ -269,167 +271,22 @@ const MainPage = (props: any) => {
     setSigner(undefined);
     setLoggedIn(!loggedIn);
   }
-  console.log('userAccountsuserAccounts', userAccounts);
+
   return (
-    <div>
-      <div className="flex flex-col w-2/5" style={{ width: '100%' }}>
-        {userAccounts && (
-          <>
-            <h1>Accounts:</h1>
-            <button onClick={onCreateNewWalletClick}>Create new</button>
-            <button onClick={onAddExistingWalletClick}>Add existing</button>
-            {!isUndasContract ? (
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}
-              >
-                <input
-                  style={{
-                    border: '1px solid black',
-                  }}
-                  onChange={(e) => setImportedContract(e.target.value)}
-                ></input>
-                <button
-                  style={{
-                    border: '1px solid black',
-                  }}
-                  onClick={() => importUndasContract(importedContract)}
-                >
-                  Import Contract
-                </button>
-              </div>
-            ) : (
-              ''
-            )}
-            {userAccounts.map((account) => (
-              <div
-                key={account.address}
-                style={{
-                  width: '100%',
-                }}
-              >
-                <div
-                  style={{
-                    width: '100%',
-                    minHeight: '30px',
-                    border: '1px solid black',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-around',
-                    alignItems: 'center',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '100%',
-                      height: '30px',
-                      display: 'flex',
-                      flexDirection: 'row',
-                      justifyContent: 'space-around',
-                      alignItems: 'center',
-                    }}
-                    onClick={() => {
-                      if (!account.isActive || account.undasContract?.isActive)
-                        switchAccount(account, false);
-                    }}
-                  >
-                    {account.isActive && !account.undasContract?.isActive && (
-                      <span>&#10004;</span>
-                    )}
-                    <span>{account.address}</span>
-                    <div
-                      style={{
-                        width: '10px',
-                        height: '10px',
-                        backgroundColor: account.isConnected ? 'green' : 'red',
-                      }}
-                      onClick={() =>
-                        onAccountSwitchConnected(account.address, false)
-                      }
-                    ></div>
-                  </div>
-                  {account.undasContract ? (
-                    <>
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '30px',
-                          marginLeft: '25px',
-                          display: 'flex',
-                          flexDirection: 'row',
-                          justifyContent: 'space-around',
-                          alignItems: 'center',
-                        }}
-                        onClick={() => {
-                          if (!account.undasContract?.isActive)
-                            switchAccount(account, true);
-                        }}
-                      >
-                        <span>&#129302;</span>
-                        {account.isActive && account.undasContract.isActive && (
-                          <span>&#10004;</span>
-                        )}
-                        <span>{account.undasContract.address}</span>
-                        <div
-                          style={{
-                            width: '10px',
-                            height: '10px',
-                            backgroundColor: account.undasContract.isConnected
-                              ? 'green'
-                              : 'red',
-                          }}
-                          onClick={() =>
-                            onAccountSwitchConnected(
-                              account.undasContract?.address ?? '',
-                              true
-                            )
-                          }
-                        ></div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      {account.isActive && (
-                        <button onClick={deployContract}>
-                          Deploy undas proxy contract
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
-          </>
-        )}
-        <p>Main page</p>
-        <select name="network">
-          <option value="mainnet">Mainnet</option>
-          <option value="bsc">Binance smart chain</option>
-          <option value="moonbeam">Moonbeam</option>
-        </select>
-        <p>Balance: 0.02</p>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Send
-        </button>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Buy
-        </button>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => logOut()}
-        >
-          Log out
-        </button>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => interactWithContract()}
-        >
-          Test contract interaction
-        </button>
-      </div>
-    </div>
+    <MainPageLayout
+      userAccounts={userAccounts}
+      onCreateNewWalletClick={onCreateNewWalletClick}
+      onAddExistingWalletClick={onAddExistingWalletClick}
+      isUndasContract={isUndasContract}
+      setImportedContract={setImportedContract}
+      importUndasContract={importUndasContract}
+      importedContract={importedContract}
+      switchAccount={switchAccount}
+      onAccountSwitchConnected={onAccountSwitchConnected}
+      deployContract={deployContract}
+      logOut={logOut}
+      interactWithContract={interactWithContract}
+    />
   );
 };
 

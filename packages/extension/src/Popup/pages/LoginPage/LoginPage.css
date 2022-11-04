@@ -1,0 +1,11 @@
+@import '../../index.css';
+
+.login {
+  display: flex;
+  flex-direction: column;
+  width: 40%;
+}
+
+.login-input {
+  background-color: rgb(59 130 246);
+}

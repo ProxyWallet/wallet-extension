@@ -9,6 +9,8 @@ import { EthereumRequest } from '../../../lib/providers/types';
 import { Context } from '../../Context';
 // import { createPasswordForMnemonic } from '../../storageUtils/utils';
 
+import './LoginPage.css';
+
 const LoginPage = (props: any) => {
   const [mnemonicPhrase, setMnemonicPhrase] = useState<any>();
   const [password, setPassword] = useState<any>();
@@ -20,58 +22,57 @@ const LoginPage = (props: any) => {
     if (!mnemonicPhrase || !password) alert('missing argument');
     if (!validatePassword(password)) alert('bad password');
     setIsLoading(true);
-    const result =
-      await sendRuntimeMessageToBackground<EthereumRequest<InitializeWalletPayloadDTO>, string>({
+    const result = await sendRuntimeMessageToBackground<
+      EthereumRequest<InitializeWalletPayloadDTO>,
+      string
+    >(
+      {
         method: InternalBgMethods.INITIALIZE_WALLET,
-        params: [{
-          mnemonic: mnemonicPhrase,
-          walletPassword: password
-        }]
-      }, RuntimePostMessagePayloadType.INTERNAL)
+        params: [
+          {
+            mnemonic: mnemonicPhrase,
+            walletPassword: password,
+          },
+        ],
+      },
+      RuntimePostMessagePayloadType.INTERNAL
+    );
     setIsLoading(false);
-    alert(`Current active address: ${result.result}`)
+    alert(`Current active address: ${result.result}`);
     setLoggedIn(!loggedIn);
-    navigate('/')
-  }
+    navigate('/');
+  };
 
   const validatePassword = async (password: string) => {
-    // todo 
+    // todo
     return true;
-  }
+  };
 
   return (
-    <div className="flex flex-col w-2/5">
+    <div className="login">
       <div>
         <h2>Login with mnemonic</h2>
         <input
           type="text"
           placeholder="Mnemonic"
-          className="bg-blue-500"
+          className="login-input"
           onChange={(e) => setMnemonicPhrase(e.target.value)}
         />
         <input
           type="text"
           placeholder="Create Password"
-          className="bg-blue-500"
+          className="login-input"
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => initializeWallet()}
-        >
+        <button className="button" onClick={() => initializeWallet()}>
           Login
         </button>
 
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => navigate('/create-wallet')}
-        >
+        <button className="button" onClick={() => navigate('/create-wallet')}>
           Create new
         </button>
       </div>
-      {isLoading && <div>
-        Loading
-      </div>}
+      {isLoading && <div>Loading</div>}
     </div>
   );
 };
