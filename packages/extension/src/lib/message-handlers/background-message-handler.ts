@@ -1,18 +1,15 @@
-import { assert } from "chai";
-import Browser from "webextension-polyfill";
 import { getCustomError } from "../errors";
 import { BackgroundOnMessageCallback } from "../message-bridge/bridge";
-import { RuntimeOnMessageResponse, RuntimePostMessagePayloadType } from "../message-bridge/types";
+import { RuntimePostMessagePayloadType } from "../message-bridge/types";
 import { ethCall } from "../providers/background/methods/external/eth_call";
 import { ethRequestAccounts } from "../providers/background/methods/external/eth_requestAccounts";
 import { ethSendTransaction } from "../providers/background/methods/external/eth_sendTransaction";
 import { bgIsLocked } from "../providers/background/methods/internal/bgIsLocked";
 import { connectAccount } from "../providers/background/methods/internal/connectAccount";
-import { deployUndasContract } from "../providers/background/methods/internal/deployUndasContract";
+import { deployProxyContract } from "../providers/background/methods/internal/deployProxyContract";
 import { disconnectAccount } from "../providers/background/methods/internal/disconnectAccount";
-import { getUndasContractDeployTx } from "../providers/background/methods/internal/getUndasContractDeployTx";
+import { getProxyContractDeployTx } from "../providers/background/methods/internal/getProxyContractDeployTx";
 import { getUserAddresses } from "../providers/background/methods/internal/getUserAddresses";
-import { importContract } from "../providers/background/methods/internal/importContract";
 import { initializeWallet } from "../providers/background/methods/internal/initializeWallet";
 import { isWalletInitialized } from "../providers/background/methods/internal/isWalletInitialized";
 import { switchAccount } from "../providers/background/methods/internal/switchAccount";
@@ -24,8 +21,8 @@ export enum InternalBgMethods {
     IS_WALLET_INITIALIZED = 'isWalletInitialized',
     INITIALIZE_WALLET = 'initializeWallet',
     GET_USER_ADDRESSES = 'getUserAddresses',
-    GET_UNDAS_CONTRACT_DEPLOY_TX = 'getUndasContractDeployTx',
-    DEPLOY_UNDAS_CONTRACT = 'deployUndasContract',
+    GET_PROXY_CONTRACT_DEPLOY_TX = 'getProxyContractDeployTx',
+    DEPLOY_PROXY_CONTRACT = 'deployProxyContract',
     SWITCH_ACCOUNT = 'switchAccount',
     DISCONNECT_ACCOUNT = 'disconnectAccount',
     CONNECT_ACCOUNT = 'connectAccount',
@@ -80,10 +77,10 @@ const handleInternal: BackgroundOnMessageCallback<any, EthereumRequest> = async 
         return isWalletInitialized(request, domain)
     } else if (request.msg.method === InternalBgMethods.GET_USER_ADDRESSES) {
         return getUserAddresses(request, domain)
-    } else if (request.msg.method === InternalBgMethods.GET_UNDAS_CONTRACT_DEPLOY_TX) {
-        return getUndasContractDeployTx(request, domain)
-    } else if (request.msg.method === InternalBgMethods.DEPLOY_UNDAS_CONTRACT) {
-        return deployUndasContract(request, domain)
+    } else if (request.msg.method === InternalBgMethods.GET_PROXY_CONTRACT_DEPLOY_TX) {
+        return getProxyContractDeployTx(request, domain)
+    } else if (request.msg.method === InternalBgMethods.DEPLOY_PROXY_CONTRACT) {
+        return deployProxyContract(request, domain)
     } else if (request.msg.method === InternalBgMethods.SWITCH_ACCOUNT) {
         return switchAccount(request, domain)
     } else if (request.msg.method === InternalBgMethods.DISCONNECT_ACCOUNT) {

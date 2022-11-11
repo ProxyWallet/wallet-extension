@@ -1,135 +1,93 @@
-import { BigNumber, ethers, UnsignedTransaction, Wallet } from "ethers";
+import { ethers, Wallet } from "ethers";
 import { getCustomError } from "../../../../errors";
 import { TransactionRequest } from '@ethersproject/abstract-provider'
-import WindowPromise, { BackgroundOnMessageCallback, sendMessageFromBackgroundToBackground, sendRuntimeMessageToPopup } from "../../../../message-bridge/bridge";
-import { RuntimeOnMessageResponse, RuntimePostMessagePayload, RuntimePostMessagePayloadType } from "../../../../message-bridge/types";
+import WindowPromise, { BackgroundOnMessageCallback, sendMessageFromBackgroundToBackground } from "../../../../message-bridge/bridge";
+import { RuntimePostMessagePayload, RuntimePostMessagePayloadType } from "../../../../message-bridge/types";
 import { getPopupPath, UIRoutes } from "../../../../popup-routes";
-import Storage, { StorageNamespaces } from "../../../../storage";
-import { getBaseUrl } from "../../../../utils/url";
+import { storageGet, StorageNamespaces } from "../../../../storage";
+import { normalizeURL } from "../../../../utils/url";
 import { EthereumRequest } from "../../../types";
-import { UserAccount, UserSelectedAccount } from "../internal/initializeWallet";
 import { getCurrentNetwork } from "../../../../requests/toRpcNode";
 import { Wallet__factory } from "../../../../../typechain";
+import { AccountInfo, StorageKeys } from "../types";
 
 export const ethSendTransaction: BackgroundOnMessageCallback<unknown, EthereumRequest<TransactionRequest>> = async (
     request,
     origin,
 ) => {
-    console.log('ethRequestAccounts');
-    const payload = request.msg;
-    const domain = getBaseUrl(origin);
+    const [method, txRequest] = tryGetPayload(request);
 
-    if (!payload || !payload.params || !payload.params.length) {
-        throw getCustomError('ethSendTransaction: invalid data');
-    }
-
-    const [txRequest] = payload.params;
-
-    console.log('Origin TxRequest', txRequest);
-    const window = new WindowPromise();
-
-    const storageAddresses = new Storage(StorageNamespaces.USER_WALLETS);
-
-
-    if (!domain) {
-        throw getCustomError('ethRequestAccounts: invalid sender origin')
-    }
-
-    const userSelectedAccount = await storageAddresses.get<UserSelectedAccount>('selectedAccount');
-
-    if (!userSelectedAccount) {
-        throw getCustomError('ethRequestAccounts: user selected address is null')
-    }
-
+    const userSelectedAccount = await storageGet<AccountInfo>(StorageKeys.SELECTED_ACCOUNT, StorageNamespaces.USER_WALLETS);
     const { rpcProvider } = await getCurrentNetwork()
 
     if (!txRequest.from) {
-        txRequest.from = userSelectedAccount.address;
+        txRequest.from = userSelectedAccount.smartAccount;
     }
 
-    const isThroughUndasProxy = 
-        userSelectedAccount.undasContract &&
-            userSelectedAccount.isUndasContractSelected &&
-            txRequest.to !== userSelectedAccount.undasContract
+    if (txRequest.from === userSelectedAccount.smartAccount) {
+        if (!userSelectedAccount.smartAccount) throw getCustomError("Proxy account was not deployed");
 
-    if (isThroughUndasProxy) {
-        txRequest.from = userSelectedAccount.address;
-
-        const walletContract = Wallet__factory.connect(userSelectedAccount.undasContract, rpcProvider);
-
-        if (!txRequest.to) throw getCustomError("missing argument");
-
-        console.log('tx.to', txRequest.to)
-        console.log('tx.datatx.data', txRequest.data)
-
-        const populatedTx = await walletContract.populateTransaction.makeTransaction(txRequest.to, txRequest.data ?? '',
-            txRequest.value ?? '0');
-
-        console.log('populatedTx', populatedTx)
+        const walletContract = Wallet__factory.connect(userSelectedAccount.smartAccount, rpcProvider);
+        const populatedTx = await walletContract.populateTransaction.makeTransaction(txRequest.to!, txRequest.data!, 0);
 
         txRequest.data = populatedTx.data
         txRequest.to = populatedTx.to
     }
 
-    if (!txRequest.nonce) {
-        txRequest.nonce = await rpcProvider.getTransactionCount(userSelectedAccount.address)
-    }
-
-    if (!txRequest.gasPrice) {
-        const estimatedGasPrice = await rpcProvider.getFeeData();
-
-        txRequest.gasPrice = estimatedGasPrice.gasPrice?.toHexString() ?? undefined;
-    }
-
-
-    if (!txRequest.gasLimit) {
-        const estimatedGas = await rpcProvider.estimateGas(txRequest).catch(err => {console.error(err); return BigNumber.from(1_000_000)});
-        txRequest.gasLimit =
-            // (txRequest as any).gas?.toString() ??
-            estimatedGas.toHexString();
-    }
-
-
-
-    let tx = txRequest;
-    console.log('TX DATA', tx.data)
-    console.log('TX DATA', userSelectedAccount.isUndasContractSelected)
+    await fillTransactionDetails(txRequest, rpcProvider, userSelectedAccount);
 
     if (request.triggerPopup) {
-        // TODO: pass flag to trigger/not-trigger popup menu
-        // to be able to use this bg handler for internal purposes 
         const response =
-            // TODO: return only updated gas fees
-            await window.getResponse<TransactionRequest>(
+            await new WindowPromise().getResponse<TransactionRequest>(
                 getPopupPath(UIRoutes.ethSendTransaction.path),
-                { method: payload.method, params: [tx] }, true);
+                { method: method, params: [txRequest] }, true);
 
         if (response.error) throw response.error;
-        tx = response.result ?? tx;
-        console.log('trueTX', tx)
     }
 
-    if(isThroughUndasProxy)
-        delete tx.value;
-
-    delete (tx as any).gas;
+    const wallet = Wallet.createRandom(); // TODO;
+    const signedTx = await wallet.signTransaction(txRequest);
     
-    delete tx.maxFeePerGas;
-    delete tx.maxPriorityFeePerGas;
-
-    const wallet = new Wallet(userSelectedAccount.privateKey ?? '');
-    console.log('defaurl tx', tx)
-
-    const signedTx = await wallet.signTransaction(tx);
-    console.log('signedTx', signedTx);
-
-    (payload.params as any[])[0] = signedTx;
-    
-    return sendMessageFromBackgroundToBackground<any, EthereumRequest>({
+    return await sendMessageFromBackgroundToBackground<any, EthereumRequest>({
         method: 'eth_sendRawTransaction',
-        params: payload.params
+        params: [signedTx]
     },
         RuntimePostMessagePayloadType.EXTERNAL,
         origin
     )
+}
+
+async function fillTransactionDetails(txRequest: ethers.providers.TransactionRequest, rpcProvider: ethers.providers.JsonRpcProvider, userSelectedAccount: AccountInfo) {
+    if (!txRequest.nonce) {
+        txRequest.nonce = await rpcProvider.getTransactionCount(userSelectedAccount.masterAccount);
+    }
+
+    if (!txRequest.gasPrice) {
+        const estimatedGasPrice = await rpcProvider.getFeeData();
+        txRequest.gasPrice = estimatedGasPrice.gasPrice?.toHexString() ?? undefined;
+    }
+
+    if (!txRequest.gasLimit) {
+        const estimatedGas = await rpcProvider.estimateGas(txRequest);
+        txRequest.gasLimit = estimatedGas.toHexString();
+    }
+}
+
+function tryGetPayload(request:RuntimePostMessagePayload<EthereumRequest<ethers.providers.TransactionRequest>>):Readonly<[string, ethers.providers.TransactionRequest]> {
+    const payload = request.msg;
+    const domain = normalizeURL(origin);
+    const txRequest = payload?.params?.[0];
+
+    if (!txRequest)
+        throw getCustomError('ethSendTransaction: invalid data');
+    if (!domain)
+        throw getCustomError('ethRequestAccounts: invalid sender origin')
+    if (!payload.method)
+        throw getCustomError("ethSendTransaction: invalid method");
+    if (!txRequest.to) 
+        throw getCustomError("missing argument TO");
+    if (!txRequest.data)
+        throw getCustomError("missing argument Data");
+
+    return [payload.method, txRequest];
 }

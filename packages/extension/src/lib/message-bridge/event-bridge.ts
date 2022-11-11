@@ -20,7 +20,6 @@ export function windowOnMessage(
     window.addEventListener('message', handleMessage, false);
 }
 
-
 export let CS_WINDOW_BRIDGE: WindowCSMessageBridge;
 
 export const initWindowBridge = (prefix?: string) => {

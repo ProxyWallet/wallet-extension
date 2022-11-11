@@ -1,4 +1,4 @@
-import { ContractFactory, ethers } from 'ethers';
+import { BigNumber, ContractFactory, ethers } from 'ethers';
 import React, { useContext, useState, useEffect } from 'react';
 import Browser from 'webextension-polyfill';
 import { sendRuntimeMessageToBackground } from '../../../lib/message-bridge/bridge';
@@ -7,24 +7,22 @@ import { InternalBgMethods } from '../../../lib/message-handlers/background-mess
 import { GetAccountsDTO } from '../../../lib/providers/background/methods/internal/getUserAddresses';
 import { EthereumRequest } from '../../../lib/providers/types';
 import { Context } from '../../Context';
-import { Marketplace__factory } from '../../testContractFactory/Marketplace__factory';
-import { Wallet } from '../../testContractFactory/Wallet';
-import { Wallet__factory } from '../../testContractFactory/Wallet__factory';
 import { TransactionRequest } from '@ethersproject/abstract-provider';
-import { DeployedContractResult } from '../../../lib/providers/background/methods/internal/deployUndasContract';
+import { DeployedContractResult } from '../../../lib/providers/background/methods/internal/deployProxyContract';
 import { SwitchAccountsRequestPayloadDTO } from '../../../lib/providers/background/methods/internal/switchAccount';
 import { getAddress } from 'ethers/lib/utils';
 import { importContract } from '../../../lib/providers/background/methods/internal/importContract';
-import { getUndasContractAddress } from '../../../lib/providers/background/methods/internal/getUndasContractAddress';
+import { getProxyContractAddress } from '../../../lib/providers/background/methods/internal/getProxyContractAddress';
 
 const MainPage = (props: any) => {
   const { loggedIn, setLoggedIn, signer, setSigner } = useContext<any>(Context);
   const [userAccounts, setUserAccounts] = useState<GetAccountsDTO[]>();
   const [importedContract, setImportedContract] = useState<any>();
-  const [isUndasContract, setIsUndasContract] = useState<any>();
+  const [isUndasContract, setIsUndasContract] = useState<boolean>();
+  const [balance, setBalance] = useState<BigNumber>();
 
   async function isUndasContractPresent() {
-    const contractAddr = await getUndasContractAddress();
+    const contractAddr = await getProxyContractAddress();
     console.log('eqweqweqweqeqw', contractAddr);
     if (contractAddr) {
       setIsUndasContract(true);
@@ -43,19 +41,13 @@ const MainPage = (props: any) => {
               address: contractAddress,
               isActive: false,
               isConnected: false,
+              balance: BigNumber.from(0),
             };
           }
           return acc;
         })
       );
     }
-  }
-
-  async function interactWithContract() {
-    const CONTRACT_ADDRESS = '0xA24a7E2beed00E65C6B44006C7cfd6c7E8409c6A';
-    const NFTContract = Marketplace__factory.connect(CONTRACT_ADDRESS, signer);
-    const tx = await NFTContract._listingsLastIndex();
-    alert(tx);
   }
 
   const getUserAccounts = async () => {
@@ -127,6 +119,7 @@ const MainPage = (props: any) => {
                 address,
                 isActive: false,
                 isConnected: false,
+                balance: BigNumber.from(0),
               };
             }
             return acc;
@@ -338,6 +331,8 @@ const MainPage = (props: any) => {
                     {account.isActive && !account.undasContract?.isActive && (
                       <span>&#10004;</span>
                     )}
+
+                    <p>Balance: {account.balance}</p>
                     <span>{account.address}</span>
                     <div
                       style={{
@@ -409,7 +404,6 @@ const MainPage = (props: any) => {
           <option value="bsc">Binance smart chain</option>
           <option value="moonbeam">Moonbeam</option>
         </select>
-        <p>Balance: 0.02</p>
         <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
           Send
         </button>
@@ -421,12 +415,6 @@ const MainPage = (props: any) => {
           onClick={() => logOut()}
         >
           Log out
-        </button>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => interactWithContract()}
-        >
-          Test contract interaction
         </button>
       </div>
     </div>

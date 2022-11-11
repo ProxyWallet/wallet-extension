@@ -1,73 +1,29 @@
-import { getAddress } from "ethers/lib/utils";
-import Browser from "webextension-polyfill";
 import { getCustomError } from "../../../../errors";
-import { BackgroundOnMessageCallback, sendMessageToTab, sendRuntimeMessageToWindow } from "../../../../message-bridge/bridge";
-import { PostMessageDestination } from "../../../../message-bridge/types";
-import Storage, { StorageNamespaces } from "../../../../storage";
-import { getBaseUrl } from "../../../../utils/url";
-import { EthereumRequest, MessageMethod } from "../../../types";
-import { UserAccount, UserSelectedAccount } from "./initializeWallet";
-import { sendAccountChangedToTab } from "../../helpers"
+import { BackgroundOnMessageCallback } from "../../../../message-bridge/bridge";
+import { RuntimePostMessagePayload } from "../../../../message-bridge/types";
+import { storageGet, StorageNamespaces, storageSet } from "../../../../storage";
+import { EthereumRequest } from "../../../types";
+import { changeAddressForAllTabs } from "../../helpers"
+import { AccountInfo, Errors, StorageKeys, SwitchAccountsRequestPayload } from "../types";
 
-export type SwitchAccountsRequestPayloadDTO = {
-    switchTo: string;
-    toContract: boolean
-}
-
-export const switchAccount: BackgroundOnMessageCallback<string, EthereumRequest<SwitchAccountsRequestPayloadDTO>> = async (
+export const switchAccount: BackgroundOnMessageCallback<string, EthereumRequest<SwitchAccountsRequestPayload>> = async (
     payload, _
 ) => {
-    if (!payload.msg || !payload.msg.params) {
-        throw getCustomError('Invalid payload');
-    }
+    const switchAccountAddress = tryGetAccountToSwitch(payload);
 
-    const [switchToAccount] = payload.msg.params;
+    const accounts = await storageGet<AccountInfo[]>(StorageKeys.ACCOUNTS, StorageNamespaces.USER_WALLETS);
+    const switchAccount = accounts.find(a => a.masterAccount === switchAccountAddress)!;
 
-    const storageWallets = new Storage(StorageNamespaces.USER_WALLETS);
-    const storageDomains = new Storage(StorageNamespaces.CONNECTED_DOMAINS);
+    await storageSet<AccountInfo>(StorageKeys.SELECTED_ACCOUNT, switchAccount, StorageNamespaces.USER_WALLETS);
+    await changeAddressForAllTabs(switchAccount.masterAccount);
 
-    // TODO: move keys to enum
-    const accounts = await storageWallets.get<UserAccount[]>('accounts');
-    const selectedAccount = await storageWallets.get<UserSelectedAccount>('selectedAccount');
-    const connectedDomains = await storageDomains.getAllKeys();
+    return switchAccount.masterAccount;
+}
 
-    if (!accounts || !accounts.length) {
-        throw getCustomError('getUserAddresses: 0 accounts');
-    }
+function tryGetAccountToSwitch(payload:RuntimePostMessagePayload<EthereumRequest<SwitchAccountsRequestPayload>>) {
+    let address = payload?.msg?.params?.[0]?.address;
+    if (!address)
+        throw getCustomError(Errors.PAYLOAD);
 
-    if (selectedAccount?.address === getAddress(switchToAccount.switchTo) &&
-        selectedAccount.isUndasContractSelected === switchToAccount.toContract
-    ) {
-        throw getCustomError('Same account');
-    }
-
-    const accountToSwitch = accounts.find(v => getAddress(v.address) === getAddress(switchToAccount.switchTo));
-
-    if (!accountToSwitch) {
-        throw getCustomError('Unknown account to switch');
-    }
-
-    if (switchToAccount.toContract && !accountToSwitch.undasContract) {
-        throw getCustomError('Undas contract is not deployed');
-    }
-
-    await storageWallets.set<UserSelectedAccount>('selectedAccount', {
-        ...accountToSwitch,
-        isUndasContractSelected: switchToAccount.toContract
-    });
-
-    // TODO: move to helpers
-    Promise.all(connectedDomains.map(async domain => {
-        const connectedAccounts = (await storageDomains.get<string[]>(domain) ?? []).map(getAddress);
-        const addressToSwitch = switchToAccount.toContract ?
-        getAddress(accountToSwitch.undasContract) :
-        getAddress(accountToSwitch.address);
-
-        const shouldSwitch = connectedAccounts.includes(addressToSwitch);
-        
-        if (shouldSwitch)
-            sendAccountChangedToTab(domain, addressToSwitch);
-    }))
-
-    return switchToAccount.toContract ? accountToSwitch.undasContract : accountToSwitch.address
+    return address;
 }

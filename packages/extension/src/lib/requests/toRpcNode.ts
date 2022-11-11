@@ -13,15 +13,12 @@ export const makeRpcRequest: BackgroundOnMessageCallback<unknown, EthereumReques
         throw getCustomError('ethRequestAccounts: invalid data');
     }
 
-
     const curNetwork = await getCurrentNetwork();
     const res = await curNetwork.rpcProvider.send(req.method, req.params ?? []);
-    console.log('rpc req result', res);
     return res;
 }
 
-export const getCurrentNetwork = async () => {
-    // todo: take this from local storage
+export const getCurrentNetwork = async () => { // TODO
     const networkConfig = {
         jsonRpcUrl: 'https://goerli.infura.io/v3/abe28880fd324397924cf12a753fcc87',
         chainId: 5,

@@ -1,13 +1,7 @@
 import { ethers } from 'ethers';
-// import LocalForageLib from 'localforage';
-import Storage from '../../lib/storage/index';
-import LocalForage from '../../lib/storage/local-forage';
+import { storageGet, storageSet } from '../../lib/storage';
 
 var CryptoJS = require('crypto-js');
-
-// LocalForageLib.defineDriver(DummyDriver);
-const localForage = new LocalForage('walletUndas');
-const walletStorage = new Storage('walletStorage', { storage: localForage });
 
 export async function createPasswordForMnemonic(
   mnemonicPhrase: string,
@@ -18,14 +12,13 @@ export async function createPasswordForMnemonic(
     wallet.privateKey,
     password
   ).toString();
-  await walletStorage.set('AesPk', cryptedPrivateKey);
-
+  await storageSet('AesPk', cryptedPrivateKey, 'walletUndas');
 }
 
 export async function decryptPrivatKeyViaPassword(password: any) {
-  const cryptedPk = await walletStorage.get('AesPk');
+  const cryptedPk = await storageGet('AesPk', 'walletUndas');
 
-  if (!cryptedPk) return console.log('!aesPk');
+  if (!cryptedPk) return console.log('!AesPk');
 
   const decryptedPrivateKey = CryptoJS.AES.decrypt(
     cryptedPk,
@@ -37,7 +30,7 @@ export async function decryptPrivatKeyViaPassword(password: any) {
 
 export async function isPresentCryptedPrivateKeyAtStorage() {
   let isPresent: Boolean = false;
-  const cryptedPk = await walletStorage.get('AesPk');
+  const cryptedPk = await storageGet('AesPk', 'walletUndas');
 
     if (cryptedPk) {
       isPresent = true;

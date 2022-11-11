@@ -1,45 +1,20 @@
 import { getCustomError, getError } from "../../../../errors";
-import WindowPromise, { BackgroundOnMessageCallback, sendRuntimeMessageToPopup } from "../../../../message-bridge/bridge";
-import { RuntimeOnMessageResponse, RuntimePostMessagePayload, RuntimePostMessagePayloadType } from "../../../../message-bridge/types";
+import WindowPromise, { BackgroundOnMessageCallback } from "../../../../message-bridge/bridge";
+import { RuntimePostMessagePayload } from "../../../../message-bridge/types";
 import { getPopupPath, UIRoutes } from "../../../../popup-routes";
-import Storage, { StorageNamespaces } from "../../../../storage";
-import { getBaseUrl } from "../../../../utils/url";
+import { storageGet, StorageNamespaces, storageSet } from "../../../../storage";
+import { normalizeURL } from "../../../../utils/url";
 import { ErrorCodes, EthereumRequest } from "../../../types";
-import { UserAccount, UserSelectedAccount } from "../internal/initializeWallet";
+import { AccountInfo, StorageKeys } from "../types";
 
 export const ethRequestAccounts: BackgroundOnMessageCallback<string[], EthereumRequest> = async (
     request,
     origin
 ) => {
-    console.log('ethRequestAccounts');
-    const payload = request.msg;
-    const domain = getBaseUrl(origin);
+    const { domain, window, payload } = tryGetPayload(request, origin);
 
-    if (!payload) {
-        throw getCustomError('ethRequestAccounts: invalid data');
-    }
-
-    const window = new WindowPromise();
-
-    const storageDomains = new Storage(StorageNamespaces.CONNECTED_DOMAINS)
-    const storageAddresses = new Storage(StorageNamespaces.USER_WALLETS);
-
-    if (!domain) {
-        throw getCustomError('ethRequestAccounts: invalid sender origin')
-    }
-
-    let connectedAddresses = await storageDomains.get<string[]>(domain)
-
-    const userSelectedAccount = await storageAddresses.get<UserSelectedAccount>('selectedAccount');
-
-    if (!userSelectedAccount) {
-        throw getCustomError('ethRequestAccounts: user selected address is null')
-    }
-
-    if (connectedAddresses &&
-        connectedAddresses.length) {
-        // todo
-    }
+    const connectedAddresses = await storageGet<string[]>(domain, StorageNamespaces.CONNECTED_DOMAINS);
+    const userSelectedAccount = await storageGet<AccountInfo>(StorageKeys.SELECTED_ACCOUNT, StorageNamespaces.USER_WALLETS);
 
     if (!connectedAddresses || !connectedAddresses.length) {
         if(request.triggerPopup) {
@@ -52,24 +27,24 @@ export const ethRequestAccounts: BackgroundOnMessageCallback<string[], EthereumR
             if (!response.result) throw getError(ErrorCodes.userRejected);
         }
 
-        connectedAddresses = [
-            userSelectedAccount.undasContract && userSelectedAccount.isUndasContractSelected ?
-                userSelectedAccount.undasContract :
-                userSelectedAccount.address
-        ];
-
-        await storageDomains.set(domain, connectedAddresses);
+        await storageSet(domain, [userSelectedAccount.smartAccount!], StorageNamespaces.CONNECTED_DOMAINS);
     }
 
-    const _selectedAddress = connectedAddresses.find( v=>
-        v === (userSelectedAccount.isUndasContractSelected ? 
-        userSelectedAccount.undasContract :
-         userSelectedAccount.address)
-    );
+    return connectedAddresses ?? [userSelectedAccount.smartAccount!];
+}
 
-    return [
-        _selectedAddress ? 
-            _selectedAddress :
-            connectedAddresses[0]
-    ]
+function tryGetPayload(request: RuntimePostMessagePayload<EthereumRequest<any>>, origin: string) {
+    const payload = request.msg;
+    const domain = normalizeURL(origin);
+
+    if (!payload) {
+        throw getCustomError('ethRequestAccounts: invalid data');
+    }
+
+    const window = new WindowPromise();
+
+    if (!domain) {
+        throw getCustomError('ethRequestAccounts: invalid sender origin');
+    }
+    return { domain, window, payload };
 }

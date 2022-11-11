@@ -1,7 +1,7 @@
 import { BrowserStorageArea } from "./types";
 import LocalForageLib from "localforage";
 
-class LocalForage implements BrowserStorageArea {
+class LocalStorage implements BrowserStorageArea {
   namespace: string;
 
   private storage: globalThis.LocalForage;
@@ -57,4 +57,4 @@ class LocalForage implements BrowserStorageArea {
 
 }
 
-export default LocalForage;
+export default LocalStorage;

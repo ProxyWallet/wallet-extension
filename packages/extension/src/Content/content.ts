@@ -14,7 +14,7 @@ function injectScript() {
     const scriptTag = document.createElement("script");
     scriptTag.setAttribute("async", "false");
     scriptTag.src = `${injectURL}`;
-    scriptTag.id = 'undas-inject'
+    scriptTag.id = 'wallet-inject'
 
     scriptTag.onload = function () {
       console.info("Hello from the content-script");
@@ -23,7 +23,7 @@ function injectScript() {
 
     container.insertBefore(scriptTag, container.children[0]);
   } catch (error) {
-    console.error("Undas: Provider injection failed.", error);
+    console.error("Wallet: Provider injection failed.", error);
   }
 }
 
@@ -31,7 +31,6 @@ const onWindowMessage = async (...args: any[]) => {
   const payload = args[0] as WindowPostMessagePayload;
 
   console.log('onWindowMessage', args);
-
 
   if (
     !payload ||
@@ -41,7 +40,6 @@ const onWindowMessage = async (...args: any[]) => {
     return;
   }
 
-  // console.log('CS msg handle: ', msg);
   const resp = await sendRuntimeMessageToBackground(JSON.parse(payload.msg) as EthereumRequest);
 
   console.log('WindowToCS send response', resp);

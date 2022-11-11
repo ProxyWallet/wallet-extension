@@ -1,5 +1,6 @@
 import { BrowserStorageArea } from "./types";
-import LocalForage from "./local-forage";
+import LocalStorage from "./local-forage";
+import { getCustomError } from "../errors";
 
 export enum StorageNamespaces {
   CONNECTED_DOMAINS = 'connected-domains',
@@ -12,52 +13,46 @@ export interface StorageOptions {
   storage?: BrowserStorageArea;
 }
 
-class Storage {
-  namespace: string;
+const getStorage = (namespace:string) => new LocalStorage(namespace);
 
-  private storage: BrowserStorageArea;
+export async function storageGet<TReturn>(key: string, namespace: string) {
+  const vals = await getStorage(namespace).get(namespace);
+  let val = vals?.[namespace]?.[key]
 
-  constructor(namespace: any, options: StorageOptions = {}) {
-    if (!options.storage) options.storage = new LocalForage(namespace);
-    this.namespace = namespace;
-    this.storage = options.storage;
-  }
-
-  async get<TReturn>(key: string) {
-    const vals = await this.storage.get(this.namespace);
-    if (vals[this.namespace] && vals[this.namespace][key])
-      return vals[this.namespace][key] as TReturn;
-    return null;
-  }
-
-  async getAllKeys() {
-    const vals = await this.storage.get(this.namespace);
-    if (vals && vals[this.namespace])
-      return Object.keys(vals[this.namespace]);
-    return [];
-  }
-
-  async set<TValue>(key: string, val: TValue) {
-    let vals = await this.storage.get(this.namespace);
-    vals = vals[this.namespace] ? vals[this.namespace] : {};
-    vals[key] = val;
-    return this.storage.set({
-      [this.namespace]: vals,
-    });
-  }
-
-  async remove(key: string) {
-    let vals = await this.storage.get(this.namespace);
-    vals = vals[this.namespace] ? vals[this.namespace] : {};
-    delete vals[key];
-    return this.storage.set({
-      [this.namespace]: vals,
-    });
-  }
-
-  async clear() {
-    return this.storage.remove(this.namespace);
-  }
+  if (val)
+    return val as TReturn;
+  else 
+    throw getCustomError(`${key} at ${namespace} does not exist`);
 }
 
-export default Storage;
+export async function storageGetAllKeys(namespace: string) {
+  const vals = await getStorage(namespace).get(namespace);
+  if (vals && vals[namespace])
+    return Object.keys(vals[namespace]);
+  return [];
+}
+
+export async function storageSet<TValue>(key: string, val: TValue, namespace: string) {
+  const storage = new LocalStorage(namespace);
+  
+  let vals = await storage.get(namespace);
+  vals = vals[namespace] ? vals[namespace] : {};
+  vals[key] = val;
+  return storage.set({
+    [namespace]: vals,
+  });
+}
+
+export async function remove(key: string, namespace: string) {
+  let storage = getStorage(namespace);
+  let vals = await storage.get(namespace);
+  vals = vals[namespace] ? vals[namespace] : {};
+  delete vals[key];
+  return storage.set({
+    [namespace]: vals,
+  });
+}
+
+export async function clear(namespace: string) {
+  return getStorage(namespace).remove(namespace);
+}
