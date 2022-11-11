@@ -1,10 +1,10 @@
 import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { sendRuntimeMessageToBackground } from '../../../lib/message-bridge/bridge';
-import { RuntimePostMessagePayloadType } from '../../../lib/message-bridge/types';
-import { InternalBgMethods } from '../../../lib/message-handlers/background-message-handler';
-import { InitializeWalletPayloadDTO } from '../../../lib/providers/background/methods/internal/initializeWallet';
-import { EthereumRequest } from '../../../lib/providers/types';
+import { sendRuntimeMessageToBackground } from '../../../Lib/message-bridge/bridge';
+import { RuntimePostMessagePayloadType } from '../../../Lib/message-bridge/types';
+import { InternalBgMethods } from '../../../Lib/message-handlers/background-message-handler';
+import { InitializeWalletPayloadDTO } from '../../../Lib/providers/background/methods/internal/initializeWallet';
+import { EthereumRequest } from '../../../Lib/providers/types';
 
 import { Context } from '../../Context';
 // import { createPasswordForMnemonic } from '../../storageUtils/utils';

@@ -6,30 +6,29 @@ import {
   EthereumResponse,
   JsonRpcRequest,
   JsonRpcResponse,
-} from "./types";
-import {
   ProviderOptions,
   ProviderInterface,
-  SendMessageHandler,
+  SendMessageHandler
 } from "./types";
 
 export class Provider extends EventEmitter implements ProviderInterface {
   chainId: string | null;
   networkVersion: string;
-  isUndas: boolean;
+  isProxyWallet: boolean;
   isMetaMask: boolean;
   selectedAddress: string | null;
   connected: boolean;
   autoRefreshOnNetworkChange = false;
 
   readonly name = 'ethereum' as const;
-  readonly version: string = '0.0.1' as const; // TODO move to config
+  readonly version: string = '0.0.1' as const;
   sendMessageHandler: SendMessageHandler;
+  
   constructor(options: ProviderOptions) {
     super();
     this.chainId = null; //deprecated
     this.networkVersion = "0x1"; //deprecated
-    this.isUndas = true;
+    this.isProxyWallet = true;
     this.isMetaMask = true;
     this.selectedAddress = null; //deprecated
     this.connected = true;

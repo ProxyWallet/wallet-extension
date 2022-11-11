@@ -173,10 +173,7 @@ class WindowPromise {
     ): Promise<RuntimeOnMessageResponse<TResult>> {
         return new Promise((resolve) => {
             Browser.tabs.onUpdated.addListener(function listener(_tabId, info, tab) {
-                console.log('status: ', tab, url, _tabId, tabId)
-
                 if (info.status === "complete" && _tabId === tabId && tab.url === url) {
-                    console.log('status: completed')
                     resolve(
                         sendMessageToNewPopupWindow(
                             tabId,

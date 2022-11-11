@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react"
 import Browser, { commands } from "webextension-polyfill";
-import { getError } from "../../../lib/errors";
-import { newPopupOnMessage } from "../../../lib/message-bridge/bridge";
-import { PostMessageDestination, RuntimeOnMessageResponse, RuntimePostMessagePayload } from "../../../lib/message-bridge/types";
-import { ErrorCodes, EthereumRequest } from "../../../lib/providers/types";
+import { getError } from "../../../Lib/errors";
+import { newPopupOnMessage } from "../../../Lib/message-bridge/bridge";
+import { PostMessageDestination, RuntimeOnMessageResponse, RuntimePostMessagePayload } from "../../../Lib/message-bridge/types";
+import { ErrorCodes, EthereumRequest } from "../../../Lib/providers/types";
 import { usePagePromise } from "../../hooks/usePagePromise";
 
 export const ConnectDapp: React.FC = () => {

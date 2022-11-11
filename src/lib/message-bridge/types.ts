@@ -13,7 +13,6 @@ export enum PostMessageDestination {
     BACKGROUND = 'background',
     NEW_POPUP = 'new-popup',
     POPUP = 'popup',
-
 }
 
 export class WindowPostMessagePayload {

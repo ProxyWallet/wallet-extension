@@ -18,7 +18,7 @@ export const ethSendTransaction: BackgroundOnMessageCallback<unknown, EthereumRe
     const [method, txRequest] = tryGetPayload(request);
 
     const userSelectedAccount = await storageGet<AccountInfo>(StorageKeys.SELECTED_ACCOUNT, StorageNamespaces.USER_WALLETS);
-    const { rpcProvider } = await getCurrentNetwork()
+    const { rpcProvider } = await getCurrentNetwork();
 
     if (!txRequest.from) {
         txRequest.from = userSelectedAccount.smartAccount;
