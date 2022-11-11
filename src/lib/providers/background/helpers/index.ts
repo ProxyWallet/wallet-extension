@@ -1,4 +1,3 @@
-import { getAddress } from "ethers/lib/utils"
 import Browser from "webextension-polyfill"
 import { getCustomError } from "../../../errors"
 import { sendMessageToTab } from "../../../message-bridge/bridge"

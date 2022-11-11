@@ -1,10 +1,8 @@
-import { EventEmitter } from "eventemitter3";
-import Browser, { commands } from "webextension-polyfill";
+import Browser from "webextension-polyfill";
 import { getCustomError, getError } from "../errors";
 import { handleBackgroundMessage, InternalBgMethods } from "../message-handlers/background-message-handler";
 import { getPopupPath, UIRoutes } from "../popup-routes";
-import { ErrorCodes, EthereumRequest, JsonRpcRequest, SendMessageHandler } from "../providers/types";
-import { generateUuid } from "../utils/uuid";
+import { ErrorCodes, EthereumRequest } from "../providers/types";
 import { PostMessageDestination, RuntimeOnMessageResponse, RuntimePostMessagePayload, RuntimePostMessagePayloadType, WindowCSMessageBridge, WindowPostMessagePayload, WindowPostMessagePayloadType } from "./types";
 
 export const sendMessageToNewPopupWindow = async <TMsg = any, TReturn = any>(
