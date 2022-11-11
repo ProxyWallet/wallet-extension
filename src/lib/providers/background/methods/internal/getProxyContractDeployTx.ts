@@ -1,5 +1,5 @@
 import { ContractFactory, ethers, Wallet } from 'ethers';
-import { Wallet__factory } from '../../../../../typechain';
+import { Wallet__factory } from '../../../../typechain';
 import { BackgroundOnMessageCallback } from '../../../../message-bridge/bridge';
 import { getCurrentNetwork } from '../../../../requests/toRpcNode';
 import { storageGet, StorageNamespaces } from '../../../../storage';

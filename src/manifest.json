@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Undas wallet",
-  "description": "Undas wallet",
+  "name": "ProxyWallet",
+  "description": "Wallet working through proxy contracts, tokenizing your entire account. Rent NFT with 100% return guarantee, Transfer the account, Automate transactions.",
   "options_page": "options.html",
   "background": {
     "service_worker": "background.bundle.js"

@@ -3,17 +3,13 @@ import { getCustomError, getError } from "../errors";
 import { handleBackgroundMessage, InternalBgMethods } from "../message-handlers/background-message-handler";
 import { getPopupPath, UIRoutes } from "../popup-routes";
 import { ErrorCodes, EthereumRequest } from "../providers/types";
-import { PostMessageDestination, RuntimeOnMessageResponse, RuntimePostMessagePayload, RuntimePostMessagePayloadType, WindowCSMessageBridge, WindowPostMessagePayload, WindowPostMessagePayloadType } from "./types";
+import { PostMessageDestination, RuntimeOnMessageResponse, RuntimePostMessagePayload, RuntimePostMessagePayloadType } from "./types";
 
 export const sendMessageToNewPopupWindow = async <TMsg = any, TReturn = any>(
     tabId: number,
     msg: TMsg
 ): Promise<RuntimeOnMessageResponse<TReturn>> => {
-    try {
         return { result: await Browser.tabs.sendMessage(tabId, msg) }
-    } catch (error: any) {
-        return { error }
-    }
 }
 
 export const sendMessageToTab = async <TMsg = any, TReturn = any>(
@@ -41,13 +37,11 @@ const sendRuntimeMessage = async <TMsg = any, TReturn = any>(
     type: RuntimePostMessagePayloadType = RuntimePostMessagePayloadType.EXTERNAL
 ) => {
     return new Promise<RuntimeOnMessageResponse<TReturn>>((resolve, _) => {
-        console.debug(`send message to ${destination}`, msg);
         chrome.runtime.sendMessage(new RuntimePostMessagePayload<TMsg>({
             msg: msg,
             destination: destination,
             type
         }), (response: RuntimeOnMessageResponse) => {
-            console.log(`${destination} response`, response)
             resolve(response);
         })
     })
@@ -91,20 +85,12 @@ const runtimeOnMessage = (
     ) {
         if (request.destination !== destination) return;
 
-        console.log(`${destination} runtimeOnMessage`, request)
-
         const promise = async () => {
             try {
                 const res = await callback(request, sender.origin ?? 'unknown');
-                console.log(`${destination} RUNTIME RESPONSE`, res);
-                sendResponse({
-                    result: res
-                } as RuntimeOnMessageResponse);
+                sendResponse({ result: res } as RuntimeOnMessageResponse);
             } catch (err) {
-                console.log(`${destination} RUNTIME ON MESSAGE ERROR`, err);
-                sendResponse({
-                    error: err
-                } as RuntimeOnMessageResponse)
+                sendResponse({ error: err } as RuntimeOnMessageResponse);
             }
         }
 

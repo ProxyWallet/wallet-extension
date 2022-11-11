@@ -4,9 +4,9 @@ import { HashRouter as Router } from 'react-router-dom';
 
 import Popup from './Popup';
 import './index.css';
-import { newPopupOnMessage, popupOnMessage } from '../lib/message-bridge/bridge';
-import { EthereumRequest } from '../lib/providers/types';
-import { RuntimeOnMessageResponse, RuntimePostMessagePayload } from '../lib/message-bridge/types';
+import { newPopupOnMessage, popupOnMessage } from '../Lib/message-bridge/bridge';
+import { EthereumRequest } from '../Lib/providers/types';
+import { RuntimeOnMessageResponse, RuntimePostMessagePayload } from '../Lib/message-bridge/types';
 
 render(
   <React.StrictMode>

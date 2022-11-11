@@ -1,18 +1,18 @@
 import { BigNumber, ContractFactory, ethers } from 'ethers';
 import React, { useContext, useState, useEffect } from 'react';
 import Browser from 'webextension-polyfill';
-import { sendRuntimeMessageToBackground } from '../../../lib/message-bridge/bridge';
-import { RuntimePostMessagePayloadType } from '../../../lib/message-bridge/types';
-import { InternalBgMethods } from '../../../lib/message-handlers/background-message-handler';
-import { GetAccountsDTO } from '../../../lib/providers/background/methods/internal/getUserAddresses';
-import { EthereumRequest } from '../../../lib/providers/types';
+import { sendRuntimeMessageToBackground } from '../../../Lib/message-bridge/bridge';
+import { RuntimePostMessagePayloadType } from '../../../Lib/message-bridge/types';
+import { InternalBgMethods } from '../../../Lib/message-handlers/background-message-handler';
+import { GetAccountsDTO } from '../../../Lib/providers/background/methods/internal/getUserAddresses';
+import { EthereumRequest } from '../../../Lib/providers/types';
 import { Context } from '../../Context';
 import { TransactionRequest } from '@ethersproject/abstract-provider';
-import { DeployedContractResult } from '../../../lib/providers/background/methods/internal/deployProxyContract';
-import { SwitchAccountsRequestPayloadDTO } from '../../../lib/providers/background/methods/internal/switchAccount';
+import { DeployedContractResult } from '../../../Lib/providers/background/methods/internal/deployProxyContract';
+import { SwitchAccountsRequestPayloadDTO } from '../../../Lib/providers/background/methods/internal/switchAccount';
 import { getAddress } from 'ethers/lib/utils';
-import { importContract } from '../../../lib/providers/background/methods/internal/importContract';
-import { getProxyContractAddress } from '../../../lib/providers/background/methods/internal/getProxyContractAddress';
+import { importContract } from '../../../Lib/providers/background/methods/internal/importContract';
+import { getProxyContractAddress } from '../../../Lib/providers/background/methods/internal/getProxyContractAddress';
 
 const MainPage = (props: any) => {
   const { loggedIn, setLoggedIn, signer, setSigner } = useContext<any>(Context);
@@ -80,7 +80,7 @@ const MainPage = (props: any) => {
       TransactionRequest
     >(
       {
-        method: InternalBgMethods.GET_UNDAS_CONTRACT_DEPLOY_TX,
+        method: InternalBgMethods.GET_PROXY_CONTRACT_DEPLOY_TX,
         params: [
           /* should pass some constructor arguments here */
         ],

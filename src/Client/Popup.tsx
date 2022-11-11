@@ -12,13 +12,13 @@ import { isPresentCryptedPrivateKeyAtStorage } from './storageUtils/utils';
 import LoginPage from './pages/LoginPage/LoginPage';
 import { ConnectDapp } from './pages/ConnectDapp';
 import { Loading } from './pages/Loading';
-import { getPopupPath, UIRoutes } from '../lib/popup-routes';
-import { sendRuntimeMessageToBackground } from '../lib/message-bridge/bridge';
-import { EthereumRequest } from '../lib/providers/types';
-import { InternalBgMethods } from '../lib/message-handlers/background-message-handler';
+import { getPopupPath, UIRoutes } from '../Lib/popup-routes';
+import { sendRuntimeMessageToBackground } from '../Lib/message-bridge/bridge';
+import { EthereumRequest } from '../Lib/providers/types';
+import { InternalBgMethods } from '../Lib/message-handlers/background-message-handler';
 import Browser from 'webextension-polyfill';
 import { InitializeWallet } from './pages/InitializeWallet';
-import { RuntimePostMessagePayloadType } from '../lib/message-bridge/types';
+import { RuntimePostMessagePayloadType } from '../Lib/message-bridge/types';
 import SendTransactionPage from './pages/SendTransaction';
 
 function Popup() {

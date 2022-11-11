@@ -1,11 +1,11 @@
 import React, { useContext, useState, useEffect } from 'react';
 import Browser, { runtime } from 'webextension-polyfill';
-import { getCustomError, getError } from '../../../lib/errors';
-import { newPopupOnMessage, sendRuntimeMessageToBackground } from '../../../lib/message-bridge/bridge';
-import { PostMessageDestination, RuntimePostMessagePayload, RuntimePostMessagePayloadType } from '../../../lib/message-bridge/types';
-import { InternalBgMethods } from '../../../lib/message-handlers/background-message-handler';
-import { GetAccountsDTO } from '../../../lib/providers/background/methods/internal/getUserAddresses';
-import { ErrorCodes, EthereumRequest } from '../../../lib/providers/types';
+import { getCustomError, getError } from '../../../Lib/errors';
+import { newPopupOnMessage, sendRuntimeMessageToBackground } from '../../../Lib/message-bridge/bridge';
+import { PostMessageDestination, RuntimePostMessagePayload, RuntimePostMessagePayloadType } from '../../../Lib/message-bridge/types';
+import { InternalBgMethods } from '../../../Lib/message-handlers/background-message-handler';
+import { GetAccountsDTO } from '../../../Lib/providers/background/methods/internal/getUserAddresses';
+import { ErrorCodes, EthereumRequest } from '../../../Lib/providers/types';
 import { Context } from '../../Context';
 import { Marketplace__factory } from '../../testContractFactory/Marketplace__factory';
 import { TransactionRequest } from '@ethersproject/abstract-provider'

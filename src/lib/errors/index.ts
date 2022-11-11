@@ -3,17 +3,20 @@ import { ErrorCodes, JSONError, ProviderError } from "../providers/types";
 
 export enum Errors {
     REQUEST_REJECTED_BY_USER = 4001,
+    UNAUTHORIZED = 4100,
+    UNSUPPORTED_NETWORK = 4200,
+    DISCONNECTED = 4900,
+    CHAIN_DISCONNECTED = 4901
 }
 
-export const errors: Record<number, any> = {
+export const errors: Record<Errors, { name: string; description: string; }> = {
     4001: {
         name: "User Rejected Request",
         description: "The user rejected the request.",
     },
     4100: {
         name: "Unauthorized",
-        description:
-            "The requested method and/or account has not been authorized by the user.",
+        description: "The requested method and/or account has not been authorized by the user.",
     },
     4200: {
         name: "Unsupported Method",
@@ -36,6 +39,7 @@ export const getCustomError = (msg: string, code = 8546): ProviderError => {
     };
     return ret;
 };
+
 export const getError = (code: ErrorCodes, data?: unknown): ProviderError => {
     assert(errors[code], "error code is invalid");
     const ret: ProviderError = {

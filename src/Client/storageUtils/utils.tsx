@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { storageGet, storageSet } from '../../lib/storage';
+import { storageGet, storageSet } from '../../Lib/storage';
 
 var CryptoJS = require('crypto-js');
 

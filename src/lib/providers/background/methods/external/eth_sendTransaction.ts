@@ -8,7 +8,7 @@ import { storageGet, StorageNamespaces } from "../../../../storage";
 import { normalizeURL } from "../../../../utils/url";
 import { EthereumRequest } from "../../../types";
 import { getCurrentNetwork } from "../../../../requests/toRpcNode";
-import { Wallet__factory } from "../../../../../typechain";
+import { Wallet__factory } from "../../../../typechain";
 import { AccountInfo, StorageKeys } from "../types";
 
 export const ethSendTransaction: BackgroundOnMessageCallback<unknown, EthereumRequest<TransactionRequest>> = async (

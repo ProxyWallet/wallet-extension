@@ -1,8 +1,7 @@
 import { ethers } from "ethers";
 import { getCustomError } from "../errors";
 import { BackgroundOnMessageCallback } from "../message-bridge/bridge";
-import { RuntimePostMessagePayload, RuntimePostMessagePayloadType } from "../message-bridge/types";
-import { EthereumRequest, JsonRpcRequest } from "../providers/types";
+import { EthereumRequest } from "../providers/types";
 
 export const makeRpcRequest: BackgroundOnMessageCallback<unknown, EthereumRequest> = async (
     request

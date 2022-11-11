@@ -1,6 +1,6 @@
-import EthereumProviderInject, { Provider } from "../lib/providers/inject";
-import { WindowPostMessagePayload } from "../lib/message-bridge/types";
-import { CS_WINDOW_BRIDGE, initWindowBridge, sendMessageFromWindowToCS as sendMessageHandler } from "../lib/message-bridge/event-bridge";
+import EthereumProviderInject, { Provider } from "../../Lib/providers/inject";
+import { WindowPostMessagePayload } from "../../Lib/message-bridge/types";
+import { CS_WINDOW_BRIDGE, initWindowBridge, sendMessageFromWindowToCS as sendMessageHandler } from "../../Lib/message-bridge/event-bridge";
 
 declare global {
     interface Window {
